@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Footer from "@/app/components/footer";
 
 import {
@@ -19,6 +19,8 @@ const changingWords = ["build.", "hustle.", "ship.", "code."];
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isDeckSliding, setIsDeckSliding] = useState(false);
+  const hasMountedDeck = useRef(false);
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prevIndex) => (prevIndex + 1) % changingWords.length);
@@ -34,6 +36,21 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 }, []);
+
+useEffect(() => {
+  if (!hasMountedDeck.current) {
+    hasMountedDeck.current = true;
+    return;
+  }
+
+  setIsDeckSliding(true);
+  const timeout = window.setTimeout(() => {
+    setIsDeckSliding(false);
+  }, 720);
+
+  return () => window.clearTimeout(timeout);
+}, [activeSlide]);
+
   return (
     
     <main className="min-h-screen bg-black text-white">
@@ -97,62 +114,43 @@ useEffect(() => {
 
      <section id="controls" className="border-y border-white/7 bg-black px-6 py-20 md:py-24">
   <div className="mx-auto max-w-6xl">
-    <div className="relative mx-auto h-[220px] w-full max-w-[760px] rounded-[42px] bg-[#202020] p-[12px] shadow-[0_0_50px_rgba(255,255,255,0.08)] sm:h-[300px] sm:rounded-[58px] sm:p-[16px] md:h-[340px] md:rounded-[70px] md:p-[18px]">
-      <div className="relative h-full w-full overflow-hidden rounded-[32px] bg-black sm:rounded-[44px] md:rounded-[52px]">
-        <div
-          className="flex h-full transition-transform duration-700 ease-in-out"
-          style={{
-            width: "300%",
-            transform: `translateX(-${activeSlide * 33.333333}%)`,
-          }}
+    <div className="relative mx-[calc(50%_-_50vw)] h-[250px] overflow-hidden sm:h-[330px] md:h-[370px]">
+      {[0, 1, 2].map((index) => (
+        <DeckPreviewFrame
+          key={index}
+          index={index}
+          activeSlide={activeSlide}
+          isDeckSliding={isDeckSliding}
         >
-          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+          {index === 0 && (
             <SlideOne />
-          </div>
+          )}
 
-          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+          {index === 1 && (
             <SlideTwo />
-          </div>
+          )}
 
-          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+          {index === 2 && (
             <SlideThree />
-          </div>
-        </div>
-
-        <div className="absolute bottom-5 left-5 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)] md:bottom-6 md:left-6" />
-
-        {/* inside dots */}
-        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2.5 md:bottom-4 md:gap-3">
-          {[0, 1, 2].map((index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setActiveSlide(index)}
-              className={`transition-all duration-300 ${
-                activeSlide === index
-                  ? "h-1.5 w-6 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]"
-                  : "h-1.5 w-1.5 rounded-full bg-white/25 hover:bg-white/50"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+          )}
+        </DeckPreviewFrame>
+      ))}
     </div>
 
     {/* outside dots */}
     <div className="mt-6 flex items-center justify-center gap-3">
-      {[0, 1, 2].map((index) => (
-        <button
-          key={index}
-          type="button"
-          onClick={() => setActiveSlide(index)}
-          className={`transition-all duration-300 ${
-            activeSlide === index
-              ? "h-2 w-8 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.45)]"
-              : "h-2 w-2 rounded-full bg-white/25 hover:bg-white/50"
-          }`}
-        />
-      ))}
+	      {[0, 1, 2].map((index) => (
+	        <button
+	          key={index}
+	          type="button"
+	          onClick={() => setActiveSlide(index)}
+	          className={`cursor-pointer transition-all duration-300 hover:scale-125 ${
+	            activeSlide === index
+	              ? "h-2 w-8 rounded-full bg-[#4DA3FF] shadow-[0_0_14px_rgba(77,163,255,0.6)]"
+	              : "h-2 w-2 rounded-full bg-[#4DA3FF]/35 hover:bg-[#4DA3FF]/80"
+	          }`}
+	        />
+	      ))}
     </div>
 
     <div className="mt-16">
@@ -556,6 +554,66 @@ function ControlMockup() {
 
         <div className="relative h-12 w-5 rounded-full bg-white/10">
           <div className="absolute bottom-3 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-white/20" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function DeckPreviewFrame({
+  index,
+  activeSlide,
+  isDeckSliding,
+  children,
+}: {
+  index: number;
+  activeSlide: number;
+  isDeckSliding: boolean;
+  children: React.ReactNode;
+}) {
+  const offset = index - activeSlide;
+  const isActive = offset === 0;
+  const isNeighbor = Math.abs(offset) === 1;
+  const shouldShow = isActive || (isDeckSliding && isNeighbor);
+  const visibleOpacity = isActive ? "opacity-100" : "opacity-10";
+
+  return (
+    <div
+      className={`absolute left-1/2 top-1/2 aspect-[2.28/1] w-[min(78vw,640px)] rounded-[34px] bg-[#202020] p-[12px] shadow-[0_0_50px_rgba(255,255,255,0.08)] transition-[opacity,filter,transform] duration-700 ease-in-out sm:rounded-[46px] sm:p-[16px] md:rounded-[56px] md:p-[18px] ${
+        isActive ? "z-20" : "z-10"
+      } ${shouldShow ? visibleOpacity : "opacity-0"} ${
+        isActive ? "blur-0" : "blur-[3px]"
+      }`}
+      style={{
+        transform: `translate(-50%, -50%) translateX(${offset * 92}%) scale(${
+          isActive ? 1 : 0.92
+        })`,
+        pointerEvents: isActive ? "auto" : "none",
+      }}
+    >
+      <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-black sm:rounded-[34px] md:rounded-[42px]">
+        <div className="flex h-full items-center justify-center">{children}</div>
+
+        <div
+          className={`absolute right-5 top-1/2 h-20 w-1 -translate-y-1/2 rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.8)] transition-opacity duration-300 md:right-6 md:h-24 ${
+            isDeckSliding ? "opacity-100" : "opacity-0"
+          }`}
+        />
+
+        <div className="absolute bottom-5 left-5 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)] md:bottom-6 md:left-6" />
+
+        <div className="absolute bottom-1 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2.5 md:bottom-1.5 md:gap-3">
+          {[0, 1, 2].map((dot) => (
+            <span
+              key={dot}
+              className={`transition-all duration-300 ${
+                activeSlide === dot
+                  ? "h-1.5 w-6 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+                  : "h-1.5 w-1.5 rounded-full bg-white/25"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </div>
