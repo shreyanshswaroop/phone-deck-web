@@ -95,7 +95,7 @@ useEffect(() => {
         </div>
       </section>
 
-     <section id="how-it-works" className="border-y border-white/7 bg-black px-6 py-24">
+     <section id="controls" className="border-y border-white/7 bg-black px-6 py-24">
   <div className="mx-auto max-w-6xl">
     <div className="relative mx-auto h-[340px] w-full max-w-[760px] rounded-[70px] bg-[#202020] p-[18px] shadow-[0_0_50px_rgba(255,255,255,0.08)]">
       <div className="relative h-full w-full overflow-hidden rounded-[52px] bg-black">
