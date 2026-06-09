@@ -95,10 +95,10 @@ useEffect(() => {
         </div>
       </section>
 
-     <section id="controls" className="border-y border-white/7 bg-black px-6 py-24">
+     <section id="controls" className="border-y border-white/7 bg-black px-6 py-20 md:py-24">
   <div className="mx-auto max-w-6xl">
-    <div className="relative mx-auto h-[340px] w-full max-w-[760px] rounded-[70px] bg-[#202020] p-[18px] shadow-[0_0_50px_rgba(255,255,255,0.08)]">
-      <div className="relative h-full w-full overflow-hidden rounded-[52px] bg-black">
+    <div className="relative mx-auto h-[220px] w-full max-w-[760px] rounded-[42px] bg-[#202020] p-[12px] shadow-[0_0_50px_rgba(255,255,255,0.08)] sm:h-[300px] sm:rounded-[58px] sm:p-[16px] md:h-[340px] md:rounded-[70px] md:p-[18px]">
+      <div className="relative h-full w-full overflow-hidden rounded-[32px] bg-black sm:rounded-[44px] md:rounded-[52px]">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
           style={{
@@ -119,12 +119,10 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="absolute right-6 top-1/2 h-24 w-1 -translate-y-1/2 bg-white" />
-
-        <div className="absolute bottom-6 left-6 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)]" />
+        <div className="absolute bottom-5 left-5 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)] md:bottom-6 md:left-6" />
 
         {/* inside dots */}
-        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
+        <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2.5 md:bottom-4 md:gap-3">
           {[0, 1, 2].map((index) => (
             <button
               key={index}
@@ -567,7 +565,7 @@ function ControlMockup() {
 
 function Tile({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-[112px] w-[112px] items-center justify-center rounded-[34px] bg-[#171717] text-4xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-white/10">
+    <div className="flex h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)] items-center justify-center rounded-[clamp(18px,4vw,34px)] bg-[#171717] text-4xl shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-white/10">
       {children}
     </div>
   );
@@ -586,7 +584,7 @@ function SlideOne() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-4 gap-[clamp(10px,3vw,24px)]">
       {appIcons.map((icon) => (
         <div key={icon.id}>
           <Tile>
@@ -595,6 +593,7 @@ function SlideOne() {
               alt={icon.alt}
               width={150}
               height={150}
+              className="h-[82%] w-[82%] object-contain"
               priority
             />
           </Tile>
@@ -612,7 +611,7 @@ function SlideTwo() {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-4 gap-[clamp(10px,3vw,24px)]">
       {appIcons.map((icon) => (
         <Tile key={icon.src}>
           <Image
@@ -620,6 +619,7 @@ function SlideTwo() {
             alt={icon.alt}
             width={150}
             height={150}
+            className="h-[82%] w-[82%] object-contain"
             priority
           />
         </Tile>
@@ -627,7 +627,7 @@ function SlideTwo() {
 
       {controls.map((Icon, i) => (
         <Tile key={i}>
-          <Icon className="h-10 w-10 text-white" />
+          <Icon className="h-[clamp(24px,6vw,40px)] w-[clamp(24px,6vw,40px)] text-white" />
         </Tile>
       ))}
     </div>
@@ -643,7 +643,7 @@ function SlideThree() {
   const controls = [Play, Mic, Camera, FastForward, Volume2];
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-4 gap-[clamp(10px,3vw,24px)]">
       {appIcons.map((icon) => (
         <Tile key={icon.src}>
           <Image
@@ -651,6 +651,7 @@ function SlideThree() {
             alt={icon.alt}
             width={150}
             height={150}
+            className="h-[82%] w-[82%] object-contain"
             priority
           />
         </Tile>
@@ -658,7 +659,7 @@ function SlideThree() {
 
       {controls.map((Icon, i) => (
         <Tile key={i}>
-          <Icon className="h-10 w-10 text-white" />
+          <Icon className="h-[clamp(24px,6vw,40px)] w-[clamp(24px,6vw,40px)] text-white" />
         </Tile>
       ))}
     </div>
