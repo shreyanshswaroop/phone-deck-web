@@ -7,23 +7,18 @@ import { useEffect, useState } from "react";
 import Footer from "@/app/components/footer";
 
 import {
-  Battery,
   Camera,
   FastForward,
   Mic,
-  MousePointer2,
-  Music,
-  Pause,
   Play,
   Rewind,
   Volume2,
-  Wifi,
-  Zap,
 } from "lucide-react";
 const changingWords = ["build.", "hustle.", "ship.", "code."];
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setWordIndex((prevIndex) => (prevIndex + 1) % changingWords.length);
@@ -32,6 +27,13 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+useEffect(() => {
+  const interval = setInterval(() => {
+    setActiveSlide((prev) => (prev + 1) % 3);
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, []);
   return (
     
     <main className="min-h-screen bg-black text-white">
@@ -82,10 +84,10 @@ export default function Home() {
         </p>
 
         <div className="mt-10 flex gap-4">
-           <Link href="/download"
+            <Link href="/download"
           className="border border-white bg-white px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-black">
             Get PhoneDeck
-          </Link>
+          </Link> 
 
           <a href="#apps"  className="border border-white/50 px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white">
             Explore the App
@@ -93,42 +95,84 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-white/7 bg-black px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          {/* iphone deck */}
-          <div className="relative mx-auto h-[340px] w-full max-w-[760px] rounded-[70px] border-[18px] border-[#202020]   bg-black  shadow-[0_0_50px_rgba(255,255,255,0.08)]">
-            
-    <div className="absolute inset-[14px] overflow-hidden rounded-[48px] bg-black">
-              <div className="flex h-full w-[300%] animate-swipe">
-                <SlideOne />
-                <SlideTwo />
-                <SlideThree />
-              </div>
-
-              <div className="absolute right-2 top-1/2 h-24 w-1 -translate-y-1/2 bg-white" />
-              <div className="absolute bottom-4 left-4 h-1.5 w-1.5 rounded-full bg-[#22c55e] shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-
-          <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-3">
-          <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-          <span className="h-1.5 w-5 rounded-full bg-white" />
-          <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-        </div>
-            </div>
+     <section id="how-it-works" className="border-y border-white/7 bg-black px-6 py-24">
+  <div className="mx-auto max-w-6xl">
+    <div className="relative mx-auto h-[340px] w-full max-w-[760px] rounded-[70px] bg-[#202020] p-[18px] shadow-[0_0_50px_rgba(255,255,255,0.08)]">
+      <div className="relative h-full w-full overflow-hidden rounded-[52px] bg-black">
+        <div
+          className="flex h-full transition-transform duration-700 ease-in-out"
+          style={{
+            width: "300%",
+            transform: `translateX(-${activeSlide * 33.333333}%)`,
+          }}
+        >
+          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+            <SlideOne />
           </div>
 
-          <div className="mt-16">
-            <p className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-white/50">
-              PhoneDeck System
-            </p>
-            <h2 className="max-w-4xl text-5xl font-bold uppercase leading-tight tracking-[-0.03em]">
-              One phone. Every Mac control.
-            </h2>
-            <p className="mt-5 max-w-2xl text-white/60">
-              Auto-swiping decks for apps, media and system controls.
-            </p>
+          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+            <SlideTwo />
+          </div>
+
+          <div className="flex h-full w-1/3 shrink-0 items-center justify-center">
+            <SlideThree />
           </div>
         </div>
-      </section>
+
+        <div className="absolute right-6 top-1/2 h-24 w-1 -translate-y-1/2 bg-white" />
+
+        <div className="absolute bottom-6 left-6 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)]" />
+
+        {/* inside dots */}
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3">
+          {[0, 1, 2].map((index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              className={`transition-all duration-300 ${
+                activeSlide === index
+                  ? "h-1.5 w-6 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+                  : "h-1.5 w-1.5 rounded-full bg-white/25 hover:bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* outside dots */}
+    <div className="mt-6 flex items-center justify-center gap-3">
+      {[0, 1, 2].map((index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={() => setActiveSlide(index)}
+          className={`transition-all duration-300 ${
+            activeSlide === index
+              ? "h-2 w-8 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.45)]"
+              : "h-2 w-2 rounded-full bg-white/25 hover:bg-white/50"
+          }`}
+        />
+      ))}
+    </div>
+
+    <div className="mt-16">
+      <p className="mb-4 text-sm font-bold uppercase tracking-[0.16em] text-white/50">
+        PhoneDeck System
+      </p>
+
+      <h2 className="max-w-4xl text-5xl font-bold uppercase leading-tight tracking-[-0.03em]">
+        One phone. Every Mac control.
+      </h2>
+
+      <p className="mt-5 max-w-2xl text-white/60">
+        Auto-swiping decks for apps, media and system controls.
+      </p>
+    </div>
+  </div>
+</section>
+
 <section id="apps" className="bg-black px-6 py-24 text-white">
   <div className="mx-auto max-w-6xl">
     <p className="mb-4 text-xs font-semibold tracking-[0.35em] text-blue-400">
@@ -309,7 +353,8 @@ export default function Home() {
   </div>
 </section> */}
 
-<HowItWorksSection />
+      <HowItWorksSection />
+    
       <Footer />
     </main>
   );
@@ -371,7 +416,7 @@ function StepCard({
   type: "download" | "connect" | "control";
 }) {
   return (
-    <div className="relative min-h-[400px] border-white/10 p-7 text-left md:border-r last:border-r-0">
+    <div className="relative flex min-h-[400px] flex-col border-white/10 p-7 text-left md:border-r last:border-r-0">
       <StepVisual type={type} />
 
       <p className="mb-6 text-xs font-bold tracking-widest text-blue-400">
@@ -390,7 +435,7 @@ function StepVisual({ type }: { type: "download" | "connect" | "control" }) {
     <div className="relative mb-10 h-[125px] w-full overflow-hidden rounded-[24px] border border-white/10 bg-[#050505]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(59,130,246,0.16),transparent_45%)]" />
 
-      <div className="absolute inset-0 flex scale-[0.68] items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         {type === "download" && <DownloadMockup />}
         {type === "connect" && <ConnectMockup />}
         {type === "control" && <ControlMockup />}
@@ -401,16 +446,16 @@ function StepVisual({ type }: { type: "download" | "connect" | "control" }) {
 
 function DownloadMockup() {
   return (
-    <div className="flex items-center justify-center gap-6">
-      <div className="h-[98px] w-[240px] rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-        <div className="mb-4 flex gap-2">
+    <div className="grid w-[384px] scale-[0.68] grid-cols-[240px_24px_62px] items-center justify-center gap-6">
+      <div className="h-[98px] w-[240px] rounded-[24px] border border-white/10 bg-white/[0.04] p-3">
+        <div className="mb-3 flex gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-3">
-          <div className="h-9 w-9 rounded-xl bg-blue-500/30 p-2">
+        <div className="flex items-center gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-2">
+          <div className="h-8 w-8 rounded-xl bg-blue-500/30 p-2">
             <div className="h-full w-full animate-pulse rounded-lg bg-blue-500" />
           </div>
 
@@ -419,22 +464,22 @@ function DownloadMockup() {
             <div className="h-2 w-12 rounded-full bg-white/20" />
           </div>
 
-          <div className="animate-pulse rounded-xl bg-blue-500 px-3 py-2 text-[10px] font-bold">
+          <div className="animate-pulse rounded-xl bg-blue-500 px-3 py-1.5 text-[10px] font-bold">
             GET
           </div>
         </div>
       </div>
 
-      <div className="animate-pulse text-blue-400">↔</div>
+      <div className="text-center text-blue-400 animate-pulse">↔</div>
 
-      <div className="h-[98px] w-[58px] rounded-[22px] border border-white/10 bg-white/[0.04] p-2">
-        <div className="mx-auto mb-3 h-9 w-9 rounded-2xl border border-blue-500/40 bg-blue-500/10 p-2">
+      <div className="mx-auto h-[98px] w-[58px] rounded-[22px] border border-white/10 bg-white/[0.04] p-2">
+        <div className="mx-auto mb-2 h-8 w-8 rounded-2xl border border-blue-500/40 bg-blue-500/10 p-2">
           <div className="h-full w-full animate-pulse rounded-xl bg-blue-500" />
         </div>
 
-        <div className="mx-auto h-2 w-8 rounded-full bg-white/10" />
+        <div className="mx-auto h-1.5 w-8 rounded-full bg-white/10" />
 
-        <div className="mx-auto mt-3 rounded-xl bg-blue-500 px-2 py-1 text-center text-[9px] font-bold">
+        <div className="mx-auto mt-2 rounded-xl bg-blue-500 px-2 py-1 text-center text-[8px] font-bold">
           GET
         </div>
       </div>
@@ -444,7 +489,7 @@ function DownloadMockup() {
 
 function ConnectMockup() {
   return (
-    <div className="flex items-center justify-center gap-6">
+    <div className="grid w-[384px] scale-[0.68] grid-cols-[240px_24px_62px] items-center justify-center gap-6">
       <div className="h-[98px] w-[240px] rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
         <div className="mb-4 flex gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -464,9 +509,9 @@ function ConnectMockup() {
         </div>
       </div>
 
-      <div className="animate-pulse text-green-400">↔</div>
+      <div className="text-center text-green-400 animate-pulse">↔</div>
 
-      <div className="h-[98px] w-[62px] rounded-[22px] border border-white/10 bg-white/[0.04] p-3 text-center">
+      <div className="mx-auto h-[98px] w-[62px] rounded-[22px] border border-white/10 bg-white/[0.04] p-3 text-center">
         <div className="mx-auto mb-3 h-3 w-3 rounded-full bg-green-400 shadow-[0_0_16px_rgba(74,222,128,0.8)]" />
         <div className="mx-auto h-1.5 w-10 rounded-full bg-green-400/40" />
 
@@ -482,9 +527,9 @@ function ConnectMockup() {
 
 function ControlMockup() {
   return (
-    <div className="flex items-center justify-center gap-6">
-      <div className="h-[98px] w-[240px] rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-        <div className="mb-4 flex gap-2">
+    <div className="grid w-[384px] scale-[0.68] grid-cols-[240px_24px_62px] items-center justify-center gap-6">
+      <div className="h-[98px] w-[240px] rounded-[24px] border border-white/10 bg-white/[0.04] p-3">
+        <div className="mb-3 flex gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
@@ -494,7 +539,7 @@ function ControlMockup() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className={`h-6 rounded-lg border border-white/10 bg-white/[0.06] ${
+              className={`h-5 rounded-lg border border-white/10 bg-white/[0.06] ${
                 i === 0
                   ? "animate-pulse border-purple-500/40 bg-purple-500/20"
                   : ""
@@ -504,9 +549,9 @@ function ControlMockup() {
         </div>
       </div>
 
-      <div className="animate-pulse text-purple-400">↔</div>
+      <div className="text-center text-purple-400 animate-pulse">↔</div>
 
-      <div className="flex h-[98px] w-[62px] items-center justify-center gap-2 rounded-[22px] border border-white/10 bg-white/[0.04]">
+      <div className="mx-auto flex h-[98px] w-[62px] items-center justify-center gap-2 rounded-[22px] border border-white/10 bg-white/[0.04]">
         <div className="relative h-12 w-5 rounded-full bg-white/10">
           <div className="absolute bottom-2 left-1/2 h-5 w-5 -translate-x-1/2 animate-bounce rounded-full bg-purple-500/80" />
         </div>
@@ -529,76 +574,93 @@ function Tile({ children }: { children: React.ReactNode }) {
 }
 
 function SlideOne() {
-  return (
-    <div className="flex w-1/3 shrink-0 items-center justify-center">
-      <div className="grid grid-cols-4 gap-6">
-        <Tile>
-          <Image
-            src="/icons/chrome.png"
-            alt="Chrome"
-            width={78}
-            height={78}
-            priority
-          />
-        </Tile>
+  const appIcons = [
+    { id: "chrome", src: "/icons/chrome.png", alt: "Chrome" },
+    { id: "youtube", src: "/icons/Youtube.png", alt: "Youtube" },
+    { id: "discord", src: "/icons/discord.png", alt: "Discord" },
+    { id: "music", src: "/icons/music.png", alt: "Music" },
+    { id: "terminal", src: "/icons/terminal.png", alt: "Terminal" },
+    { id: "whatsapp", src: "/icons/whatsapp.png", alt: "WhatsApp" },
+    { id: "claude", src: "/icons/claude.png", alt: "Claude" },
+    { id: "obs", src: "/icons/obs.png", alt: "OBS" },
+  ];
 
-        {[Rewind, Play, FastForward, Mic, Camera, Rewind, Play].map(
-          (Icon, i) => (
-            <Tile key={i}>
-              <Icon className="h-10 w-10 text-white" />
-            </Tile>
-          )
-        )}
-      </div>
+  return (
+    <div className="grid grid-cols-4 gap-6">
+      {appIcons.map((icon) => (
+        <div key={icon.id}>
+          <Tile>
+            <Image
+              src={icon.src}
+              alt={icon.alt}
+              width={150}
+              height={150}
+              priority
+            />
+          </Tile>
+        </div>
+      ))}
     </div>
   );
 }
 
 function SlideTwo() {
+  const controls = [Play, Mic, Camera, Rewind, FastForward, Volume2];
+  const appIcons = [
+    { src: "/icons/chrome.png", alt: "Chrome" },
+    { src: "/icons/discord.png", alt: "Discord" },
+  ];
+
   return (
-    <div className="flex w-1/3 shrink-0 items-center justify-center">
-      <div className="grid grid-cols-4 gap-6">
-        {[Camera, Volume2, Music, Pause, Rewind, Play, FastForward, Mic].map(
-          (Icon, i) => (
-            <Tile key={i}>
-              <Icon className="h-10 w-10 text-white" />
-            </Tile>
-          )
-        )}
-      </div>
+    <div className="grid grid-cols-4 gap-6">
+      {appIcons.map((icon) => (
+        <Tile key={icon.src}>
+          <Image
+            src={icon.src}
+            alt={icon.alt}
+            width={150}
+            height={150}
+            priority
+          />
+        </Tile>
+      ))}
+
+      {controls.map((Icon, i) => (
+        <Tile key={i}>
+          <Icon className="h-10 w-10 text-white" />
+        </Tile>
+      ))}
     </div>
   );
 }
 
 function SlideThree() {
-  return (
-    <div className="flex w-1/3 shrink-0 items-center justify-center">
-      <div className="grid grid-cols-4 gap-6">
-        {[MousePointer2, Wifi, Battery, Zap].map((Icon, i) => (
-          <Tile key={i}>
-            <Icon className="h-10 w-10 text-[#1c69d4]" />
-          </Tile>
-        ))}
+  const appIcons = [
+    { src: "/icons/finder.png", alt: "Finder" },
+    { src: "/icons/chrome.png", alt: "Chrome" },
+    { src: "/icons/discord.png", alt: "Discord" },
+  ];
+  const controls = [Play, Mic, Camera, FastForward, Volume2];
 
-        <ControlCard label="Volume" value="72%" />
-        <ControlCard label="Brightness" value="58%" />
-      </div>
-    </div>
-  );
-}
-
-function ControlCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="col-span-2 bg-[#1a1a1a] p-5 ring-1 ring-white/10">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/50">
-        {label}
-      </p>
-      <div className="mt-5 h-1 bg-white/15">
-        <div
-          className="h-1 bg-white"
-          style={{ width: value }}
-        />
-      </div>
+    <div className="grid grid-cols-4 gap-6">
+      {appIcons.map((icon) => (
+        <Tile key={icon.src}>
+          <Image
+            src={icon.src}
+            alt={icon.alt}
+            width={150}
+            height={150}
+            priority
+          />
+        </Tile>
+      ))}
+
+      {controls.map((Icon, i) => (
+        <Tile key={i}>
+          <Icon className="h-10 w-10 text-white" />
+        </Tile>
+      ))}
     </div>
   );
 }
