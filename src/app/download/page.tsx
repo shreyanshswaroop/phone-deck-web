@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-const pocketDeckDownloadHref = "/downloads/PocketDeck-mac-arm64.zip";
+const pocketDeckDownloadHref =
+  process.env.NEXT_PUBLIC_POCKETDECK_DOWNLOAD_URL ||
+  "/downloads/PocketDeck-mac-arm64.zip";
 
 export default function DownloadPage() {
   return (
