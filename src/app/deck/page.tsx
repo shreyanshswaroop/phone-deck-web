@@ -65,16 +65,18 @@ export default function DeckPage() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const lastLayoutRef = useRef("");
   const hasLoadedInitialLayoutRef = useRef(false);
+  const previousSlideRef = useRef(0);
+  const pageDotsTimerRef = useRef<number | null>(null);
   const [cloudOnline, setCloudOnline] = useState(false);
   const [macConnected, setMacConnected] = useState(false);
   const [phoneName, setPhoneName] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
+  const [showPageDots, setShowPageDots] = useState(false);
   const [deckPages, setDeckPages] = useState<DeckPageData[]>(() =>
     cloneDeckPages()
   );
   const activeSlideIndex = Math.min(activeSlide, deckPages.length - 1);
   const activePage = deckPages[activeSlideIndex] ?? deckPages[0];
-  const emptySlots = Math.max(0, 8 - activePage.tiles.length);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -221,6 +223,31 @@ export default function DeckPage() {
     return () => window.removeEventListener("storage", handleStoredLayout);
   }, []);
 
+  useEffect(() => {
+    if (previousSlideRef.current === activeSlideIndex) {
+      return;
+    }
+
+    previousSlideRef.current = activeSlideIndex;
+    setShowPageDots(true);
+
+    if (pageDotsTimerRef.current) {
+      window.clearTimeout(pageDotsTimerRef.current);
+    }
+
+    pageDotsTimerRef.current = window.setTimeout(() => {
+      setShowPageDots(false);
+      pageDotsTimerRef.current = null;
+    }, 1300);
+
+    return () => {
+      if (pageDotsTimerRef.current) {
+        window.clearTimeout(pageDotsTimerRef.current);
+        pageDotsTimerRef.current = null;
+      }
+    };
+  }, [activeSlideIndex]);
+
   function sendCommand(command: string) {
     const socket = socketRef.current;
 
@@ -329,27 +356,43 @@ export default function DeckPage() {
         <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-black sm:rounded-[36px] md:rounded-[44px]">
           <div className="absolute bottom-[13%] left-[3.4%] h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_16px_rgba(34,197,94,0.9)] sm:h-2.5 sm:w-2.5" />
 
-          <div className="flex h-full items-center justify-center px-[10%] pb-[10%] pt-[8%] sm:px-[12%]">
-            <DeckGrid>
-              {activePage.tiles.map((tile) => (
-                <DeckTile
-                  key={tile.id}
-                  tile={tile}
-                  onCommand={sendCommand}
-                />
-              ))}
-              {Array.from({ length: emptySlots }).map((_, index) => (
+          <div
+            className="flex h-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform"
+            style={{
+              transform: `translate3d(-${activeSlideIndex * 100}%, 0, 0)`,
+            }}
+          >
+            {deckPages.map((page) => {
+              const emptySlots = Math.max(0, 8 - page.tiles.length);
+
+              return (
                 <div
-                  key={`empty-${index}`}
-                  aria-hidden="true"
-                  className="h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)]"
-                />
-              ))}
-            </DeckGrid>
+                  key={page.id}
+                  className="flex h-full w-full shrink-0 items-center justify-center px-[10%] pb-[10%] pt-[8%] sm:px-[12%]"
+                >
+                  <DeckGrid>
+                    {page.tiles.map((tile) => (
+                      <DeckTile
+                        key={tile.id}
+                        tile={tile}
+                        onCommand={sendCommand}
+                      />
+                    ))}
+                    {Array.from({ length: emptySlots }).map((_, index) => (
+                      <div
+                        key={`empty-${page.id}-${index}`}
+                        aria-hidden="true"
+                        className="h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)]"
+                      />
+                    ))}
+                  </DeckGrid>
+                </div>
+              );
+            })}
           </div>
 
-          {activeSlideIndex > 0 ? (
-            <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-3 md:bottom-1.5">
+          {showPageDots ? (
+            <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-3 transition-opacity duration-200 md:bottom-1.5">
               {deckPages.map((page, slide) => (
                 <button
                   key={page.id}

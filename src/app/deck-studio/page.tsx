@@ -17,7 +17,6 @@ import {
   MonitorSmartphone,
   Music,
   Play,
-  Plus,
   Power,
   Search,
   Settings,
@@ -543,10 +542,10 @@ export default function BuilderPage() {
                 <button
                   type="button"
                   onClick={createPage}
-                  className="flex w-full items-center justify-center gap-2 rounded-[22px] border border-dashed border-white/15 px-3 py-4 text-sm font-semibold text-white/40 transition hover:border-[#4DA3FF]/40 hover:text-[#4DA3FF]"
+                  className="flex w-full items-center gap-3 rounded-[22px] border border-dashed border-white/15 p-3 text-left text-sm font-semibold text-white/40 transition hover:border-[#4DA3FF]/40 hover:text-[#4DA3FF]"
                 >
-                  <Plus className="h-4 w-4" />
-                  New Page
+                  <MiniPagePreview tiles={[]} />
+                  <span className="min-w-0 flex-1 truncate">New Page</span>
                 </button>
               </div>
             </div>
