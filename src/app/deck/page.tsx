@@ -28,10 +28,14 @@ import {
   DECK_LAYOUT_REQUEST_EVENT,
   DECK_LAYOUT_STORAGE_KEY,
   DECK_LAYOUT_UPDATE_EVENT,
+  PAIRING_SESSION_EVENT,
+  readPairingCodeFromUrl,
   readStoredDeckLayout,
   readStoredPhoneDeviceName,
+  normalizePairingCode,
   sanitizeDeckPages,
   writeStoredDeckLayout,
+  writeStoredControllerPairingCode,
   writeStoredPhoneDeviceName,
 } from "@/app/lib/deck-sync";
 
@@ -70,6 +74,9 @@ export default function DeckPage() {
   const [cloudOnline, setCloudOnline] = useState(false);
   const [macConnected, setMacConnected] = useState(false);
   const [phoneName, setPhoneName] = useState("");
+  const [pairCode, setPairCode] = useState("");
+  const [pairError, setPairError] = useState("");
+  const [pairCodeInput, setPairCodeInput] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
   const [showPageDots, setShowPageDots] = useState(false);
   const [deckPages, setDeckPages] = useState<DeckPageData[]>(() =>
@@ -81,12 +88,19 @@ export default function DeckPage() {
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
       setPhoneName(readStoredPhoneDeviceName());
+      const initialPairCode = readPairingCodeFromUrl();
+      setPairCode(initialPairCode);
+      setPairCodeInput(initialPairCode);
     }, 0);
 
     return () => window.clearTimeout(loadTimer);
   }, []);
 
   useEffect(() => {
+    if (!pairCode) {
+      return;
+    }
+
     const s = io(CLOUD_URL, {
       transports: ["websocket", "polling"],
     });
@@ -115,7 +129,8 @@ export default function DeckPage() {
       connectedRef.current = true;
       setCloudOnline(true);
       setMacConnected(true);
-      s.emit("register-phone", createPhoneDeviceInfo());
+      s.emit(PAIRING_SESSION_EVENT, { pairCode, role: "phone" });
+      s.emit("register-phone", { ...createPhoneDeviceInfo(), pairCode });
       s.emit("get-mac-status");
       s.emit(DECK_LAYOUT_REQUEST_EVENT);
     });
@@ -160,7 +175,7 @@ export default function DeckPage() {
       socketRef.current = null;
       s.disconnect();
     };
-  }, []);
+  }, [pairCode]);
 
   function savePhoneName() {
     writeStoredPhoneDeviceName(phoneName);
@@ -168,8 +183,22 @@ export default function DeckPage() {
     const socket = socketRef.current;
 
     if (socket?.connected) {
-      socket.emit("register-phone", createPhoneDeviceInfo());
+      socket.emit("register-phone", { ...createPhoneDeviceInfo(), pairCode });
     }
+  }
+
+  function joinPairingCode() {
+    const normalizedCode = normalizePairingCode(pairCodeInput);
+
+    if (!normalizedCode) {
+      setPairError("Enter a code like PD-123456.");
+      return;
+    }
+
+    writeStoredControllerPairingCode(normalizedCode);
+    setPairCode(normalizedCode);
+    setPairError("");
+    setPairCodeInput(normalizedCode);
   }
 
   useEffect(() => {
@@ -255,8 +284,53 @@ export default function DeckPage() {
       return;
     }
 
-    socket.emit("phone-command", { command });
+    socket.emit("phone-command", { command, pairCode });
     setMacConnected(true);
+  }
+
+  if (!pairCode) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
+        <div className="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.055] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#4DA3FF]">
+            PocketDeck
+          </p>
+          <h1 className="mt-3 text-4xl font-bold tracking-[-0.05em]">
+            Enter Pair Code
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-white/45">
+            Open Deck Studio from the PocketDeck menu bar app and enter the
+            code shown there.
+          </p>
+          <input
+            value={pairCodeInput}
+            onChange={(event) => {
+              setPairCodeInput(event.target.value);
+              setPairError("");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                joinPairingCode();
+              }
+            }}
+            placeholder="PD-482913"
+            className="mt-7 h-14 w-full rounded-2xl border border-white/10 bg-black px-4 text-center text-xl font-bold uppercase tracking-[0.18em] text-white outline-none transition placeholder:text-white/20 focus:border-[#4DA3FF]/55"
+          />
+          {pairError ? (
+            <p className="mt-3 text-center text-sm font-semibold text-red-300">
+              {pairError}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={joinPairingCode}
+            className="mt-4 h-12 w-full rounded-2xl bg-white text-sm font-bold text-black transition hover:opacity-90"
+          >
+            Pair Controller
+          </button>
+        </div>
+      </main>
+    );
   }
 
   function handleTouchStart(event: React.TouchEvent<HTMLElement>) {

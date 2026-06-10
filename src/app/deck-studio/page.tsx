@@ -42,17 +42,22 @@ import {
   MAC_APPS_CURRENT_EVENT,
   MAC_APPS_REQUEST_EVENT,
   MAC_APPS_UPDATE_EVENT,
+  PAIRING_SESSION_EVENT,
   PHONE_CONNECTED_EVENT,
   PHONE_DISCONNECTED_EVENT,
   PHONE_STATUS_EVENT,
   PHONE_STATUS_REQUEST_EVENT,
+  generatePairingCode,
+  readPairingCodeFromUrl,
   readStoredDeckLayout,
+  readStoredStudioPairingCode,
   sanitizeMacApps,
   sanitizeDeckPages,
   sanitizePhoneDeviceInfo,
   type MacAppInfo,
   type PhoneDeviceInfo,
   writeStoredDeckLayout,
+  writeStoredStudioPairingCode,
 } from "@/app/lib/deck-sync";
 
 const iconMap: Record<DeckIconKey, LucideIcon> = {
@@ -104,6 +109,7 @@ export default function BuilderPage() {
   const [showPageDots, setShowPageDots] = useState(false);
   const [cloudOnline, setCloudOnline] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
+  const [pairCode, setPairCode] = useState("");
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [editingPageName, setEditingPageName] = useState("");
   const [appSearch, setAppSearch] = useState("");
@@ -146,6 +152,14 @@ export default function BuilderPage() {
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
+      const initialPairCode =
+        readPairingCodeFromUrl() ||
+        readStoredStudioPairingCode() ||
+        generatePairingCode();
+
+      writeStoredStudioPairingCode(initialPairCode);
+      setPairCode(initialPairCode);
+
       if (hasLoadedInitialLayoutRef.current) {
         return;
       }
@@ -166,6 +180,10 @@ export default function BuilderPage() {
   }, []);
 
   useEffect(() => {
+    if (!pairCode) {
+      return;
+    }
+
     const socket = io(CLOUD_URL, {
       transports: ["websocket", "polling"],
     });
@@ -214,7 +232,8 @@ export default function BuilderPage() {
 
     socket.on("connect", () => {
       setCloudOnline(true);
-      socket.emit("register-builder");
+      socket.emit(PAIRING_SESSION_EVENT, { pairCode, role: "builder" });
+      socket.emit("register-builder", { pairCode });
       socket.emit(DECK_LAYOUT_REQUEST_EVENT);
       socket.emit(PHONE_STATUS_REQUEST_EVENT);
       socket.emit(MAC_APPS_REQUEST_EVENT);
@@ -239,7 +258,7 @@ export default function BuilderPage() {
       socketRef.current = null;
       socket.disconnect();
     };
-  }, []);
+  }, [pairCode]);
 
   useEffect(() => {
     if (!hasMountedPageDotsRef.current) {
@@ -634,6 +653,12 @@ export default function BuilderPage() {
                     : "Cloud Ready"
                   : "Local Only"}
               </div>
+
+              {pairCode ? (
+                <div className="rounded-full border border-white/10 bg-white/[0.055] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-white/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                  Pair {pairCode}
+                </div>
+              ) : null}
 
               <Link
                 href="/deck"

@@ -12,6 +12,10 @@ export const PHONE_STATUS_REQUEST_EVENT = "phone-status-request";
 export const MAC_APPS_CURRENT_EVENT = "mac-apps-current";
 export const MAC_APPS_REQUEST_EVENT = "mac-apps-request";
 export const MAC_APPS_UPDATE_EVENT = "mac-apps-update";
+export const CONTROLLER_PAIRING_CODE_STORAGE_KEY =
+  "phonedeck-controller-pairing-code";
+export const PAIRING_SESSION_EVENT = "join-pairing-session";
+export const STUDIO_PAIRING_CODE_STORAGE_KEY = "phonedeck-studio-pairing-code";
 export const PHONE_DEVICE_ID_STORAGE_KEY = "phonedeck-phone-device-id";
 export const PHONE_DEVICE_NAME_STORAGE_KEY = "phonedeck-phone-name";
 
@@ -37,6 +41,82 @@ export type MacAppInfo = {
   bundleId?: string;
   path?: string;
 };
+
+export function normalizePairingCode(value: string) {
+  const cleanValue = value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (!cleanValue) {
+    return "";
+  }
+
+  const withoutPrefix = cleanValue.startsWith("PD")
+    ? cleanValue.slice(2)
+    : cleanValue;
+
+  const digits = withoutPrefix.replace(/\D/g, "").slice(0, 6);
+
+  return digits.length === 6 ? `PD-${digits}` : "";
+}
+
+export function generatePairingCode() {
+  const code =
+    typeof crypto !== "undefined" && "getRandomValues" in crypto
+      ? crypto.getRandomValues(new Uint32Array(1))[0] % 1000000
+      : Math.floor(Math.random() * 1000000);
+
+  return `PD-${code.toString().padStart(6, "0")}`;
+}
+
+export function readPairingCodeFromUrl() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return normalizePairingCode(params.get("pair") ?? "");
+}
+
+function readStoredPairingCode(storageKey: string) {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return normalizePairingCode(window.localStorage.getItem(storageKey) ?? "");
+}
+
+function writeStoredPairingCode(storageKey: string, pairCode: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const normalizedCode = normalizePairingCode(pairCode);
+
+  if (!normalizedCode) {
+    window.localStorage.removeItem(storageKey);
+    return;
+  }
+
+  window.localStorage.setItem(storageKey, normalizedCode);
+}
+
+export function readStoredStudioPairingCode() {
+  return readStoredPairingCode(STUDIO_PAIRING_CODE_STORAGE_KEY);
+}
+
+export function writeStoredStudioPairingCode(pairCode: string) {
+  writeStoredPairingCode(STUDIO_PAIRING_CODE_STORAGE_KEY, pairCode);
+}
+
+export function readStoredControllerPairingCode() {
+  return readStoredPairingCode(CONTROLLER_PAIRING_CODE_STORAGE_KEY);
+}
+
+export function writeStoredControllerPairingCode(pairCode: string) {
+  writeStoredPairingCode(CONTROLLER_PAIRING_CODE_STORAGE_KEY, pairCode);
+}
 
 export function cloneDeckPages(pages: DeckPage[] = defaultDeckPages) {
   return pages.map((page) => ({
