@@ -2,14 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type DragEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Camera,
   ChevronDown,
   Trash2,
   Folder,
-  HelpCircle,
-  Info,
   MonitorSmartphone,
   Music,
   Play,
@@ -95,7 +99,6 @@ export default function BuilderPage() {
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [editingPageName, setEditingPageName] = useState("");
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [appSearch, setAppSearch] = useState("");
   const [connectedPhone, setConnectedPhone] = useState<PhoneDeviceInfo | null>(
     null
@@ -391,7 +394,7 @@ export default function BuilderPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="grid min-h-screen items-start lg:grid-cols-[340px_1fr]">
-        <aside className="bg-black p-4 lg:sticky lg:top-5 lg:self-start lg:p-5">
+        <aside className="bg-black p-4 lg:sticky lg:top-5 lg:self-start lg:p-0 lg:pl-5">
           <div className="flex min-h-[calc(100vh-32px)] flex-col rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl lg:h-[calc(100vh-40px)] lg:min-h-0">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.12] bg-white/[0.045] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
@@ -526,41 +529,16 @@ export default function BuilderPage() {
             </div>
 
             <div className="mt-8 border-t border-white/10 pt-3">
-              <button
-                type="button"
-                onClick={() => setSettingsOpen((open) => !open)}
-                aria-expanded={settingsOpen}
+              <Link
+                href="/deck-studio/settings"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-white/65 transition hover:bg-white/[0.055] hover:text-white"
               >
                 <Settings className="h-4 w-4 text-white/45" />
                 <span className="min-w-0 flex-1">Settings</span>
-                <ChevronDown
-                  className={`h-4 w-4 text-white/35 transition ${
-                    settingsOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {settingsOpen ? (
-                <div className="mt-2 space-y-1">
-                  <Link
-                    href="/"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.055] hover:text-white"
-                  >
-                    <Info className="h-4 w-4 text-white/45" />
-                    <span className="min-w-0 flex-1">About PhoneDeck</span>
-                    <span className="text-xs text-white/30">v0.1.0</span>
-                  </Link>
-
-                  <Link
-                    href="/contact"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.055] hover:text-white"
-                  >
-                    <HelpCircle className="h-4 w-4 text-white/45" />
-                    <span>Help & Feedback</span>
-                  </Link>
-                </div>
-              ) : null}
+                <ChevronDown className="h-4 w-4 -rotate-90 text-white/35" />
+              </Link>
             </div>
           </div>
         </aside>
@@ -675,6 +653,7 @@ export default function BuilderPage() {
           </div>
         </section>
       </div>
+
     </main>
   );
 }
