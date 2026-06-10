@@ -100,11 +100,20 @@ useEffect(() => {
           mode and real-time Mac status.
         </p>
 
-        <div className="mt-10 flex gap-4">
+        <div className="mt-10 flex flex-wrap gap-4">
             <Link href="/download"
           className="border border-white bg-white px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-black">
             Get PhoneDeck
           </Link> 
+
+          <Link
+            href="/deck-studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border border-white bg-white px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-black"
+          >
+            Deck Studio
+          </Link>
 
           <a href="#apps"  className="border border-white/50 px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-white">
             Explore the App
