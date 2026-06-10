@@ -38,13 +38,18 @@ import {
   DECK_LAYOUT_CURRENT_EVENT,
   DECK_LAYOUT_REQUEST_EVENT,
   DECK_LAYOUT_UPDATE_EVENT,
+  MAC_APPS_CURRENT_EVENT,
+  MAC_APPS_REQUEST_EVENT,
+  MAC_APPS_UPDATE_EVENT,
   PHONE_CONNECTED_EVENT,
   PHONE_DISCONNECTED_EVENT,
   PHONE_STATUS_EVENT,
   PHONE_STATUS_REQUEST_EVENT,
   readStoredDeckLayout,
+  sanitizeMacApps,
   sanitizeDeckPages,
   sanitizePhoneDeviceInfo,
+  type MacAppInfo,
   type PhoneDeviceInfo,
   writeStoredDeckLayout,
 } from "@/app/lib/deck-sync";
@@ -101,6 +106,7 @@ export default function BuilderPage() {
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [editingPageName, setEditingPageName] = useState("");
   const [appSearch, setAppSearch] = useState("");
+  const [macApps, setMacApps] = useState<MacAppInfo[] | null>(null);
   const [connectedPhone, setConnectedPhone] = useState<PhoneDeviceInfo | null>(
     null
   );
@@ -108,10 +114,22 @@ export default function BuilderPage() {
     pages.find((page) => page.id === activePageId) ?? pages[0];
   const activePageFull = activePage.tiles.length >= 8;
 
-  const libraryTiles = useMemo(
+  const fallbackLibraryTiles = useMemo(
     () => defaultDeckPages.flatMap((page) => page.tiles),
     []
   );
+  const libraryTiles = useMemo(() => {
+    if (!macApps) {
+      return fallbackLibraryTiles;
+    }
+
+    return macApps.map((app) => ({
+      id: app.id,
+      label: app.name,
+      command: app.command,
+      image: app.icon,
+    }));
+  }, [fallbackLibraryTiles, macApps]);
   const filteredLibraryTiles = useMemo(() => {
     const query = appSearch.trim().toLowerCase();
 
@@ -182,11 +200,22 @@ export default function BuilderPage() {
       setConnectedPhone(phone.connected ? phone : null);
     }
 
+    function applyMacApps(payload: unknown) {
+      const apps = sanitizeMacApps(payload);
+
+      if (!apps) {
+        return;
+      }
+
+      setMacApps(apps);
+    }
+
     socket.on("connect", () => {
       setCloudOnline(true);
       socket.emit("register-builder");
       socket.emit(DECK_LAYOUT_REQUEST_EVENT);
       socket.emit(PHONE_STATUS_REQUEST_EVENT);
+      socket.emit(MAC_APPS_REQUEST_EVENT);
     });
 
     socket.on("disconnect", () => {
@@ -199,6 +228,8 @@ export default function BuilderPage() {
     socket.on(PHONE_CONNECTED_EVENT, applyPhoneStatus);
     socket.on(PHONE_STATUS_EVENT, applyPhoneStatus);
     socket.on(PHONE_DISCONNECTED_EVENT, () => setConnectedPhone(null));
+    socket.on(MAC_APPS_CURRENT_EVENT, applyMacApps);
+    socket.on(MAC_APPS_UPDATE_EVENT, applyMacApps);
 
     socketRef.current = socket;
 

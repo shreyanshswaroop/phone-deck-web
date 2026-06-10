@@ -9,6 +9,9 @@ export const PHONE_CONNECTED_EVENT = "phone-connected";
 export const PHONE_DISCONNECTED_EVENT = "phone-disconnected";
 export const PHONE_STATUS_EVENT = "phone-status";
 export const PHONE_STATUS_REQUEST_EVENT = "phone-status-request";
+export const MAC_APPS_CURRENT_EVENT = "mac-apps-current";
+export const MAC_APPS_REQUEST_EVENT = "mac-apps-request";
+export const MAC_APPS_UPDATE_EVENT = "mac-apps-update";
 export const PHONE_DEVICE_ID_STORAGE_KEY = "phonedeck-phone-device-id";
 export const PHONE_DEVICE_NAME_STORAGE_KEY = "phonedeck-phone-name";
 
@@ -24,6 +27,15 @@ export type PhoneDeviceInfo = {
   detail: string;
   connected: boolean;
   connectedAt: number;
+};
+
+export type MacAppInfo = {
+  id: string;
+  name: string;
+  command: string;
+  icon?: string;
+  bundleId?: string;
+  path?: string;
 };
 
 export function cloneDeckPages(pages: DeckPage[] = defaultDeckPages) {
@@ -215,4 +227,81 @@ export function sanitizePhoneDeviceInfo(input: unknown): PhoneDeviceInfo | null 
     connectedAt:
       typeof phone.connectedAt === "number" ? phone.connectedAt : Date.now(),
   };
+}
+
+function createAppId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function sanitizeMacApps(input: unknown): MacAppInfo[] | null {
+  const apps = Array.isArray(input)
+    ? input
+    : input &&
+        typeof input === "object" &&
+        "apps" in input &&
+        Array.isArray(input.apps)
+      ? input.apps
+      : null;
+
+  if (!apps) {
+    return null;
+  }
+
+  const seenIds = new Set<string>();
+  const cleanApps = apps
+    .map((app): MacAppInfo | null => {
+      if (!app || typeof app !== "object") {
+        return null;
+      }
+
+      const rawApp = app as Partial<MacAppInfo>;
+      const name =
+        typeof rawApp.name === "string" ? rawApp.name.trim() : "";
+
+      if (!name) {
+        return null;
+      }
+
+      const bundleId =
+        typeof rawApp.bundleId === "string" ? rawApp.bundleId.trim() : "";
+      const path = typeof rawApp.path === "string" ? rawApp.path.trim() : "";
+      const command =
+        typeof rawApp.command === "string" && rawApp.command.trim()
+          ? rawApp.command.trim()
+          : bundleId
+            ? `open:${bundleId}`
+            : path
+              ? `open:${path}`
+              : name.toLowerCase();
+      const baseId =
+        typeof rawApp.id === "string" && rawApp.id.trim()
+          ? createAppId(rawApp.id)
+          : createAppId(bundleId || path || name);
+      const id = baseId || `app-${Date.now()}`;
+
+      if (seenIds.has(id)) {
+        return null;
+      }
+
+      seenIds.add(id);
+
+      return {
+        id,
+        name,
+        command,
+        icon:
+          typeof rawApp.icon === "string" && rawApp.icon.trim()
+            ? rawApp.icon.trim()
+            : undefined,
+        bundleId: bundleId || undefined,
+        path: path || undefined,
+      };
+    })
+    .filter((app): app is MacAppInfo => app !== null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return cleanApps.length > 0 ? cleanApps : null;
 }
