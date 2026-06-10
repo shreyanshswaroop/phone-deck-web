@@ -45,6 +45,80 @@ export function cloneDeckPages(pages: DeckPage[] = defaultDeckPages) {
   }));
 }
 
+const currentDefaultControlsPage = defaultDeckPages.find(
+  (page) => page.id === "controls"
+);
+const currentDefaultAppsPage = defaultDeckPages.find(
+  (page) => page.id === "apps"
+);
+const legacyDefaultAppTileIds = new Set([
+  "chrome",
+  "youtube",
+  "discord",
+  "music",
+  "terminal",
+  "whatsapp",
+  "claude",
+  "obs",
+]);
+const legacyDefaultControlTileIds = new Set([
+  "finder",
+  "spotify",
+  "playpause",
+  "mute",
+  "unmute",
+  "camera",
+  "spotlight",
+  "sleep",
+]);
+const currentDefaultControlTileIds = new Set(
+  currentDefaultControlsPage?.tiles.map((tile) => tile.id) ?? []
+);
+
+function shouldUpgradeDefaultControlsPage(page: DeckPage) {
+  if (page.id !== "controls" || !currentDefaultControlsPage) {
+    return false;
+  }
+
+  const tileIds = page.tiles.map((tile) => tile.id);
+  const hasCurrentControls = tileIds.some((tileId) =>
+    currentDefaultControlTileIds.has(tileId)
+  );
+  const onlyLegacyControls =
+    tileIds.length > 0 &&
+    tileIds.every((tileId) => legacyDefaultControlTileIds.has(tileId));
+
+  return onlyLegacyControls && !hasCurrentControls;
+}
+
+function shouldClearLegacyDefaultAppsPage(page: DeckPage) {
+  if (page.id !== "apps" || !currentDefaultAppsPage) {
+    return false;
+  }
+
+  return (
+    page.tiles.length > 0 &&
+    page.tiles.every((tile) => legacyDefaultAppTileIds.has(tile.id))
+  );
+}
+
+export function upgradeDeckPages(pages: DeckPage[]) {
+  return pages.map((page) => {
+    if (shouldClearLegacyDefaultAppsPage(page) && currentDefaultAppsPage) {
+      return cloneDeckPages([currentDefaultAppsPage])[0];
+    }
+
+    if (shouldUpgradeDefaultControlsPage(page) && currentDefaultControlsPage) {
+      return cloneDeckPages([currentDefaultControlsPage])[0];
+    }
+
+    return {
+      ...page,
+      tiles: page.tiles.map((tile) => ({ ...tile })),
+    };
+  });
+}
+
 export function createDeckLayoutPayload(pages: DeckPage[]): DeckLayoutPayload {
   return {
     version: 1,
@@ -116,7 +190,7 @@ export function sanitizeDeckPages(input: unknown): DeckPage[] | null {
     })
     .filter((page): page is DeckPage => page !== null);
 
-  return cleanPages.length > 0 ? cleanPages : null;
+  return cleanPages.length > 0 ? upgradeDeckPages(cleanPages) : null;
 }
 
 export function readStoredDeckLayout() {

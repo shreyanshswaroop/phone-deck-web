@@ -1,4 +1,6 @@
 import Image from "next/image";
+import Link from "next/link";
+
 export default function FinalCTASection() {
   return (
     <section className="relative overflow-hidden border-t border-white/10 bg-black py-36 text-white">
@@ -37,10 +39,11 @@ export default function FinalCTASection() {
 
         <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
          
-           <a href="/download"
+           <Link
+          href="/download"
           className="border border-white bg-white px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-black">
             Get PhoneDeck
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -4,11 +4,11 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
   Camera,
-  Folder,
-  Music,
+  Lock,
   Play,
-  Power,
-  Search,
+  SquareDashed,
+  SquareStop,
+  Video,
   Volume2,
   VolumeX,
   Wifi,
@@ -37,11 +37,11 @@ import {
 
 const iconMap: Record<DeckIconKey, LucideIcon> = {
   camera: Camera,
-  finder: Folder,
-  music: Music,
+  lock: Lock,
   play: Play,
-  power: Power,
-  search: Search,
+  record: Video,
+  screenshot: SquareDashed,
+  stop: SquareStop,
   volume: Volume2,
   "volume-x": VolumeX,
 };
@@ -444,8 +444,8 @@ function DeckTile({
           alt=""
           width={150}
           height={150}
+          loading="eager"
           className="h-[80%] w-[80%] object-contain transition group-active:scale-90"
-          priority
         />
       ) : Icon ? (
         <Icon className="h-[42%] w-[42%] text-white transition group-active:scale-90" />

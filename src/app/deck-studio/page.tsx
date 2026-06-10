@@ -12,14 +12,15 @@ import {
 import {
   Camera,
   ChevronDown,
-  Trash2,
-  Folder,
+  Lock,
   MonitorSmartphone,
-  Music,
   Play,
-  Power,
   Search,
   Settings,
+  SquareDashed,
+  SquareStop,
+  Trash2,
+  Video,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -56,11 +57,11 @@ import {
 
 const iconMap: Record<DeckIconKey, LucideIcon> = {
   camera: Camera,
-  finder: Folder,
-  music: Music,
+  lock: Lock,
   play: Play,
-  power: Power,
-  search: Search,
+  record: Video,
+  screenshot: SquareDashed,
+  stop: SquareStop,
   volume: Volume2,
   "volume-x": VolumeX,
 };
@@ -114,22 +115,23 @@ export default function BuilderPage() {
     pages.find((page) => page.id === activePageId) ?? pages[0];
   const activePageFull = activePage.tiles.length >= 8;
 
-  const fallbackLibraryTiles = useMemo(
-    () => defaultDeckPages.flatMap((page) => page.tiles),
+  const controlLibraryTiles = useMemo(
+    () =>
+      defaultDeckPages.find((page) => page.id === "controls")?.tiles ?? [],
     []
   );
   const libraryTiles = useMemo(() => {
-    if (!macApps) {
-      return fallbackLibraryTiles;
-    }
+    const appTiles = macApps
+      ? macApps.map((app) => ({
+          id: app.id,
+          label: app.name,
+          command: app.command,
+          image: app.icon,
+        }))
+      : [];
 
-    return macApps.map((app) => ({
-      id: app.id,
-      label: app.name,
-      command: app.command,
-      image: app.icon,
-    }));
-  }, [fallbackLibraryTiles, macApps]);
+    return [...controlLibraryTiles, ...appTiles];
+  }, [controlLibraryTiles, macApps]);
   const filteredLibraryTiles = useMemo(() => {
     const query = appSearch.trim().toLowerCase();
 
@@ -666,7 +668,7 @@ export default function BuilderPage() {
                 <div className="mt-8">
                   <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/35">
-                      Apps On This Mac
+                      Controls & Apps On This Mac
                     </p>
 
                     <label className="flex h-10 w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3 text-white/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition focus-within:border-[#4DA3FF]/45 focus-within:text-white sm:max-w-[260px]">
@@ -674,7 +676,7 @@ export default function BuilderPage() {
                       <input
                         value={appSearch}
                         onChange={(event) => setAppSearch(event.target.value)}
-                        placeholder="Search apps"
+                        placeholder="Search controls or apps"
                         className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
                       />
                       <span className="text-xs text-white/30">
@@ -685,7 +687,7 @@ export default function BuilderPage() {
 
                   {filteredLibraryTiles.length > 0 ? (
                     <div
-                      className={`grid grid-cols-4 place-items-center gap-x-5 gap-y-8 transition sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-7 ${
+                      className={`grid grid-cols-4 place-items-start gap-x-5 gap-y-8 transition sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-7 ${
                         activePageFull
                           ? "pointer-events-none opacity-60 saturate-75"
                           : "opacity-100"
@@ -702,7 +704,7 @@ export default function BuilderPage() {
                     </div>
                   ) : (
                     <div className="rounded-[22px] border border-dashed border-white/10 px-5 py-8 text-center text-sm text-white/40">
-                      No apps found.
+                      No controls or apps found.
                     </div>
                   )}
                 </div>
@@ -879,6 +881,7 @@ function DeckPreviewTile({
             alt=""
             width={120}
             height={120}
+            loading="eager"
             className="h-[82%] w-[82%] object-contain"
           />
         ) : Icon ? (
@@ -915,37 +918,42 @@ function LibraryTile({
   const Icon = tile.icon ? iconMap[tile.icon] : null;
 
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      draggable={!disabled}
-      onDragStart={(event) => {
-        if (disabled) {
-          return;
-        }
+    <div className="flex w-[92px] flex-col items-center gap-2">
+      <button
+        type="button"
+        disabled={disabled}
+        draggable={!disabled}
+        onDragStart={(event) => {
+          if (disabled) {
+            return;
+          }
 
-        event.dataTransfer.effectAllowed = "copy";
-        event.dataTransfer.setData(
-          TILE_DRAG_DATA_TYPE,
-          JSON.stringify({ type: "library", tile })
-        );
-      }}
-      onClick={() => onAddTile(tile)}
-      className="flex h-[72px] w-[72px] cursor-grab items-center justify-center rounded-[22px] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)] ring-1 ring-white/10 transition hover:ring-white/25 hover:shadow-[0_0_28px_rgba(77,163,255,0.18)] active:cursor-grabbing active:scale-95 disabled:cursor-not-allowed disabled:opacity-100 disabled:hover:ring-white/10 disabled:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)]"
-      aria-label={`Add ${tile.label}`}
-    >
-      {tile.image ? (
-        <Image
-          src={tile.image}
-          alt=""
-          width={64}
-          height={64}
-          className="h-[74%] w-[74%] object-contain"
-        />
-      ) : Icon ? (
-        <Icon className="h-8 w-8 text-white/75" />
-      ) : null}
-    </button>
+          event.dataTransfer.effectAllowed = "copy";
+          event.dataTransfer.setData(
+            TILE_DRAG_DATA_TYPE,
+            JSON.stringify({ type: "library", tile })
+          );
+        }}
+        onClick={() => onAddTile(tile)}
+        className="flex h-[72px] w-[72px] cursor-grab items-center justify-center rounded-[22px] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)] ring-1 ring-white/10 transition hover:ring-white/25 hover:shadow-[0_0_28px_rgba(77,163,255,0.18)] active:cursor-grabbing active:scale-95 disabled:cursor-not-allowed disabled:opacity-100 disabled:hover:ring-white/10 disabled:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)]"
+        aria-label={`Add ${tile.label}`}
+      >
+        {tile.image ? (
+          <Image
+            src={tile.image}
+            alt=""
+            width={64}
+            height={64}
+            className="h-[74%] w-[74%] object-contain"
+          />
+        ) : Icon ? (
+          <Icon className="h-8 w-8 text-white/75" />
+        ) : null}
+      </button>
+      <span className="block w-full truncate text-center text-xs font-semibold leading-4 text-white/75">
+        {tile.label}
+      </span>
+    </div>
   );
 }
 

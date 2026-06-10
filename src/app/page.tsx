@@ -53,7 +53,7 @@ useEffect(() => {
 
   return (
     
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen overflow-x-hidden bg-black text-white">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between border-b border-white/15 px-6">
         <div className="font-bold tracking-wide">PHONEDECK</div>
 
@@ -101,7 +101,8 @@ useEffect(() => {
         </p>
 
         <div className="mt-10 flex flex-wrap gap-4">
-            <Link href="/download"
+            <Link
+          href="/download"
           className="border border-white bg-white px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] text-black">
             Get PhoneDeck
           </Link> 
@@ -123,7 +124,7 @@ useEffect(() => {
 
      <section id="controls" className="border-y border-white/7 bg-black px-6 py-20 md:py-24">
   <div className="mx-auto max-w-6xl">
-    <div className="relative mx-[calc(50%_-_50vw)] h-[250px] overflow-hidden sm:h-[330px] md:h-[370px]">
+    <div className="relative left-1/2 h-[250px] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden sm:h-[330px] md:h-[370px]">
       {[0, 1, 2].map((index) => (
         <DeckPreviewFrame
           key={index}
