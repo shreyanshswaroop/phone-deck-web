@@ -92,9 +92,11 @@ export default function BuilderPage() {
   const socketRef = useRef<Socket | null>(null);
   const lastLayoutRef = useRef("");
   const hasLoadedInitialLayoutRef = useRef(false);
+  const hasMountedPageDotsRef = useRef(false);
   const [pages, setPages] = useState<DeckPage[]>(() => cloneDeckPages());
   const [activePageId, setActivePageId] = useState(defaultDeckPages[0].id);
   const [selectedTileId, setSelectedTileId] = useState<string | null>(null);
+  const [showPageDots, setShowPageDots] = useState(false);
   const [cloudOnline, setCloudOnline] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
@@ -206,6 +208,21 @@ export default function BuilderPage() {
       socket.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasMountedPageDotsRef.current) {
+      hasMountedPageDotsRef.current = true;
+      return;
+    }
+
+    setShowPageDots(true);
+
+    const dotsTimer = window.setTimeout(() => {
+      setShowPageDots(false);
+    }, 1300);
+
+    return () => window.clearTimeout(dotsTimer);
+  }, [activePageId]);
 
   useEffect(() => {
     if (!hasLoadedInitialLayoutRef.current) {
@@ -407,8 +424,14 @@ export default function BuilderPage() {
             </div>
 
             <div className="mt-7 grid grid-cols-[58px_1fr] items-center gap-4 rounded-[26px] border border-white/[0.12] bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/[0.12] bg-white/[0.035]">
-                <MonitorSmartphone className="h-7 w-7 text-white/75" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+                <Image
+                  src="/icons/iphone.png"
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]"
+                />
               </div>
 
               <div className="min-w-0">
@@ -598,8 +621,13 @@ export default function BuilderPage() {
                     pages={pages}
                     activePageId={activePage.id}
                     selectedTileId={selectedTileId}
+                    showPageDots={showPageDots}
                     onSelectTile={setSelectedTileId}
                     onRemoveTile={removeTileById}
+                    onSelectPage={(pageId) => {
+                      setActivePageId(pageId);
+                      setSelectedTileId(null);
+                    }}
                     onAddTile={addTileToActivePage}
                     onDropTile={handleDeckDrop}
                   />
@@ -662,16 +690,20 @@ function DeckPreview({
   pages,
   activePageId,
   selectedTileId,
+  showPageDots,
   onSelectTile,
   onRemoveTile,
+  onSelectPage,
   onAddTile,
   onDropTile,
 }: {
   pages: DeckPage[];
   activePageId: string;
   selectedTileId: string | null;
+  showPageDots: boolean;
   onSelectTile: (tileId: string) => void;
   onRemoveTile: (tileId: string) => void;
+  onSelectPage: (pageId: string) => void;
   onAddTile: (tile: DeckTileData, insertIndex?: number) => void;
   onDropTile: (event: DragEvent<HTMLElement>, targetIndex: number) => void;
 }) {
@@ -686,9 +718,9 @@ function DeckPreview({
 
   return (
     <div className="relative aspect-[1.99/1] w-full max-w-[640px] rounded-[34px] bg-[#202020] shadow-[0_0_50px_rgba(255,255,255,0.08)] sm:rounded-[46px] md:rounded-[56px]">
-      <div className="absolute inset-[12px] overflow-hidden rounded-[26px] bg-black sm:inset-[16px] sm:rounded-[34px] md:inset-[18px] md:rounded-[42px]">
+      <div className="absolute inset-[8px] overflow-hidden rounded-[26px] bg-black sm:inset-[10px] sm:rounded-[36px] md:inset-[11px] md:rounded-[44px]">
         <div className="absolute bottom-5 left-5 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)] md:bottom-6 md:left-6" />
-        <div className="absolute right-4 top-1/2 z-30 h-20 w-1 -translate-y-1/2 rounded-full bg-white ] md:right-5 md:h-24" />
+        <div className="absolute right-2 top-1/2 z-30 h-20 w-0.5 -translate-y-1/2 rounded-full bg-white md:right-2.5 md:h-24" />
 
         <div
           className="relative h-full"
@@ -750,10 +782,23 @@ function DeckPreview({
           })}
         </div>
 
-        {/* <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-3 md:bottom-1.5">
-          <span className="h-1.5 w-6 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
-          <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
-        </div> */}
+        {showPageDots ? (
+          <div className="absolute bottom-1 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 md:bottom-1.5">
+            {pages.map((page, pageIndex) => (
+              <button
+                key={page.id}
+                type="button"
+                aria-label={`Show ${page.name}`}
+                onClick={() => onSelectPage(page.id)}
+                className={`h-1.5 w-1.5 rounded-full transition ${
+                  pageIndex === activePageIndex
+                    ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.85)]"
+                    : "bg-white/30"
+                }`}
+              />
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -878,29 +923,31 @@ function MiniPagePreview({ tiles }: { tiles: DeckTileData[] }) {
   const cells = Array.from({ length: 8 }, (_, index) => tiles[index] ?? null);
 
   return (
-    <div className="grid h-10 w-12 shrink-0 grid-cols-4 gap-0.5 rounded-lg bg-black p-1 ring-1 ring-white/10">
-      {cells.map((tile, index) => {
-        const Icon = tile?.icon ? iconMap[tile.icon] : null;
+    <div className="relative h-11 w-[76px] shrink-0 rounded-[14px] bg-[#202020] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ring-1 ring-white/10">
+      <div className="grid h-full w-full grid-cols-4 gap-0.5 rounded-[10px] bg-black p-1">
+        {cells.map((tile, index) => {
+          const Icon = tile?.icon ? iconMap[tile.icon] : null;
 
-        return (
-          <span
-            key={tile?.id ?? `empty-${index}`}
-            className="flex items-center justify-center rounded-[3px] bg-white/[0.035]"
-          >
-            {tile?.image ? (
-              <Image
-                src={tile.image}
-                alt=""
-                width={16}
-                height={16}
-                className="h-full w-full object-contain"
-              />
-            ) : Icon ? (
-              <Icon className="h-2.5 w-2.5 text-white/70" />
-            ) : null}
-          </span>
-        );
-      })}
+          return (
+            <span
+              key={tile?.id ?? `empty-${index}`}
+              className="flex items-center justify-center rounded-[4px] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            >
+              {tile?.image ? (
+                <Image
+                  src={tile.image}
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="h-[78%] w-[78%] object-contain"
+                />
+              ) : Icon ? (
+                <Icon className="h-2.5 w-2.5 text-white/70" />
+              ) : null}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -322,11 +322,11 @@ export default function DeckPage() {
       </p>
 
       <section
-        className="relative aspect-[2.28/1] w-[min(calc(100vw_-_32px),704px)] touch-pan-y rounded-[34px] bg-[#202020] p-[12px] shadow-[0_0_70px_rgba(255,255,255,0.08)] sm:rounded-[46px] sm:p-[16px] md:rounded-[56px] md:p-[18px]"
+        className="relative aspect-[2.28/1] w-[min(calc(100vw_-_32px),704px)] touch-pan-y rounded-[34px] bg-[#202020] p-[8px] shadow-[0_0_70px_rgba(255,255,255,0.08)] sm:rounded-[46px] sm:p-[10px] md:rounded-[56px] md:p-[11px]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-black sm:rounded-[34px] md:rounded-[42px]">
+        <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-black sm:rounded-[36px] md:rounded-[44px]">
           <div className="absolute bottom-[13%] left-[3.4%] h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_16px_rgba(34,197,94,0.9)] sm:h-2.5 sm:w-2.5" />
 
           <div className="flex h-full items-center justify-center px-[10%] pb-[10%] pt-[8%] sm:px-[12%]">
@@ -348,21 +348,23 @@ export default function DeckPage() {
             </DeckGrid>
           </div>
 
-          <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-3 md:bottom-1.5">
-            {deckPages.map((page, slide) => (
-              <button
-                key={page.id}
-                type="button"
-                aria-label={`Show ${page.name} slide`}
-                onClick={() => setActiveSlide(slide)}
-                className={`transition ${
-                  activeSlideIndex === slide
-                    ? "h-1.5 w-8 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.85)]"
-                    : "h-1.5 w-1.5 rounded-full bg-white/30"
-                }`}
-              />
-            ))}
-          </div>
+          {activeSlideIndex > 0 ? (
+            <div className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-3 md:bottom-1.5">
+              {deckPages.map((page, slide) => (
+                <button
+                  key={page.id}
+                  type="button"
+                  aria-label={`Show ${page.name} slide`}
+                  onClick={() => setActiveSlide(slide)}
+                  className={`h-1.5 w-1.5 rounded-full transition ${
+                    activeSlideIndex === slide
+                      ? "bg-white shadow-[0_0_10px_rgba(255,255,255,0.85)]"
+                      : "bg-white/30"
+                  }`}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </section>
     </main>
