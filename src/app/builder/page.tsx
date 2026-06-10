@@ -5,14 +5,18 @@ import Link from "next/link";
 import { type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera,
+  ChevronDown,
   Trash2,
   Folder,
+  HelpCircle,
+  Info,
   MonitorSmartphone,
   Music,
   Play,
   Plus,
   Power,
   Search,
+  Settings,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -91,18 +95,30 @@ export default function BuilderPage() {
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [editingPageName, setEditingPageName] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appSearch, setAppSearch] = useState("");
   const [connectedPhone, setConnectedPhone] = useState<PhoneDeviceInfo | null>(
     null
   );
   const activePage =
     pages.find((page) => page.id === activePageId) ?? pages[0];
-  const selectedTile =
-    activePage.tiles.find((tile) => tile.id === selectedTileId) ?? null;
+  const activePageFull = activePage.tiles.length >= 8;
 
   const libraryTiles = useMemo(
     () => defaultDeckPages.flatMap((page) => page.tiles),
     []
   );
+  const filteredLibraryTiles = useMemo(() => {
+    const query = appSearch.trim().toLowerCase();
+
+    if (!query) {
+      return libraryTiles;
+    }
+
+    return libraryTiles.filter((tile) =>
+      `${tile.label} ${tile.command}`.toLowerCase().includes(query)
+    );
+  }, [appSearch, libraryTiles]);
 
   useEffect(() => {
     const loadTimer = window.setTimeout(() => {
@@ -216,36 +232,13 @@ export default function BuilderPage() {
     return () => window.clearTimeout(syncTimer);
   }, [pages]);
 
-  function updateSelectedTile(field: "label" | "command", value: string) {
-    if (!selectedTile) {
-      return;
-    }
-
+  function removeTileById(tileId: string) {
     setPages((currentPages) =>
       currentPages.map((page) =>
         page.id === activePage.id
           ? {
               ...page,
-              tiles: page.tiles.map((tile) =>
-                tile.id === selectedTile.id ? { ...tile, [field]: value } : tile
-              ),
-            }
-          : page
-      )
-    );
-  }
-
-  function removeSelectedTile() {
-    if (!selectedTile) {
-      return;
-    }
-
-    setPages((currentPages) =>
-      currentPages.map((page) =>
-        page.id === activePage.id
-          ? {
-              ...page,
-              tiles: page.tiles.filter((tile) => tile.id !== selectedTile.id),
+              tiles: page.tiles.filter((tile) => tile.id !== tileId),
             }
           : page
       )
@@ -397,137 +390,177 @@ export default function BuilderPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
-        <aside className="border-b border-white/10 bg-[#080808] p-5 lg:border-b-0 lg:border-r">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-              <MonitorSmartphone className="h-5 w-5 text-[#4DA3FF]" />
-            </div>
-            <div>
-              <p className="text-sm font-bold tracking-wide">PhoneDeck</p>
-              <p className="text-xs text-white/40">Command Center</p>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-[52px_1fr] items-center gap-3 rounded-[28px] border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/40">
-              <MonitorSmartphone className="h-7 w-7 text-white/75" />
-            </div>
-
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold">
-                {connectedPhone?.name ?? "No phone connected"}
-              </p>
-              <div
-                className={`mt-1 flex items-center gap-2 text-xs font-semibold ${
-                  connectedPhone ? "text-emerald-400" : "text-white/35"
-                }`}
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    connectedPhone
-                      ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
-                      : "bg-white/25"
-                  }`}
-                />
-                {connectedPhone ? "Connected" : "Waiting"}
+      <div className="grid min-h-screen items-start lg:grid-cols-[340px_1fr]">
+        <aside className="bg-black p-4 lg:sticky lg:top-5 lg:self-start lg:p-5">
+          <div className="flex min-h-[calc(100vh-32px)] flex-col rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl lg:h-[calc(100vh-40px)] lg:min-h-0">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.12] bg-white/[0.045] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                <MonitorSmartphone className="h-5 w-5 text-[#4DA3FF]" />
               </div>
-              <p className="mt-1 truncate text-xs text-white/35">
-                {connectedPhone?.detail ?? "Open /deck on your phone"}
-              </p>
+              <div>
+                <p className="text-base font-bold tracking-wide">PhoneDeck</p>
+                <p className="text-sm text-white/40">Command Center</p>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-8">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/35">
-              Pages
-            </p>
+            <div className="mt-7 grid grid-cols-[58px_1fr] items-center gap-4 rounded-[26px] border border-white/[0.12] bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/[0.12] bg-white/[0.035]">
+                <MonitorSmartphone className="h-7 w-7 text-white/75" />
+              </div>
 
-            <div className="space-y-2">
-              {pages.map((page, index) => {
-                const canDeletePage = !defaultPageIds.has(page.id);
-
-                return (
-                  <div
-                    key={page.id}
-                    className={`group flex w-full items-center gap-2 rounded-2xl border p-2 transition ${
-                      activePage.id === page.id
-                        ? "border-[#4DA3FF]/40 bg-[#4DA3FF]/10"
-                        : "border-white/10 bg-white/[0.03] hover:border-white/20"
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold">
+                  {connectedPhone?.name ?? "No phone connected"}
+                </p>
+                <div
+                  className={`mt-1 flex items-center gap-2 text-xs font-semibold ${
+                    connectedPhone ? "text-emerald-400" : "text-white/35"
+                  }`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${
+                      connectedPhone
+                        ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                        : "bg-white/25"
                     }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActivePageId(page.id);
-                        setSelectedTileId(null);
-                      }}
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-left"
+                  />
+                  {connectedPhone ? "Connected" : "Waiting"}
+                </div>
+                <p className="mt-1 truncate text-xs text-white/35">
+                  {connectedPhone?.detail ?? "Open /deck on your phone"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 min-h-0 flex-1 overflow-y-auto pr-1">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-white/35">
+                Pages
+              </p>
+
+              <div className="space-y-2">
+                {pages.map((page, index) => {
+                  const canDeletePage = !defaultPageIds.has(page.id);
+
+                  return (
+                    <div
+                      key={page.id}
+                      className={`group flex w-full items-center gap-3 rounded-[22px] border p-3 transition ${
+                        activePage.id === page.id
+                          ? "border-[#4DA3FF]/45 bg-[#4DA3FF]/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                          : "border-white/[0.11] bg-black/[0.18] hover:border-white/20 hover:bg-white/[0.04]"
+                      }`}
                     >
-                      <MiniPagePreview tiles={page.tiles} />
-
-                      <div className="min-w-0 flex-1">
-                        {editingPageId === page.id ? (
-                          <input
-                            value={editingPageName}
-                            autoFocus
-                            onClick={(event) => event.stopPropagation()}
-                            onDoubleClick={(event) => event.stopPropagation()}
-                            onChange={(event) =>
-                              setEditingPageName(event.target.value)
-                            }
-                            onBlur={saveEditingPageName}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.currentTarget.blur();
-                              }
-
-                              if (event.key === "Escape") {
-                                event.preventDefault();
-                                cancelEditingPageName();
-                              }
-                            }}
-                            className="w-full rounded-lg border border-[#4DA3FF]/40 bg-black/60 px-2 py-1 text-sm font-semibold text-white outline-none"
-                          />
-                        ) : (
-                          <p
-                            onDoubleClick={(event) => {
-                              event.stopPropagation();
-                              startEditingPageName(page);
-                            }}
-                            className="truncate text-sm font-semibold"
-                          >
-                            {page.name}
-                          </p>
-                        )}
-                        <p className="text-xs text-white/35">
-                          Page {index + 1} · {page.tiles.length}/8
-                        </p>
-                      </div>
-                    </button>
-
-                    {canDeletePage ? (
                       <button
                         type="button"
-                        aria-label={`Delete ${page.name}`}
-                        onClick={() => deletePage(page.id)}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/30 opacity-0 transition hover:bg-red-400/10 hover:text-red-300 group-hover:opacity-100"
+                        onClick={() => {
+                          setActivePageId(page.id);
+                          setSelectedTileId(null);
+                        }}
+                        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 text-left"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    ) : null}
-                  </div>
-                );
-              })}
+                        <MiniPagePreview tiles={page.tiles} />
 
+                        <div className="min-w-0 flex-1">
+                          {editingPageId === page.id ? (
+                            <input
+                              value={editingPageName}
+                              autoFocus
+                              onClick={(event) => event.stopPropagation()}
+                              onDoubleClick={(event) => event.stopPropagation()}
+                              onChange={(event) =>
+                                setEditingPageName(event.target.value)
+                              }
+                              onBlur={saveEditingPageName}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  event.currentTarget.blur();
+                                }
+
+                                if (event.key === "Escape") {
+                                  event.preventDefault();
+                                  cancelEditingPageName();
+                                }
+                              }}
+                              className="w-full rounded-lg border border-[#4DA3FF]/40 bg-black/60 px-2 py-1 text-sm font-semibold text-white outline-none"
+                            />
+                          ) : (
+                            <p
+                              onDoubleClick={(event) => {
+                                event.stopPropagation();
+                                startEditingPageName(page);
+                              }}
+                              className="truncate text-sm font-semibold"
+                            >
+                              {page.name}
+                            </p>
+                          )}
+                          <p className="text-xs text-white/35">
+                            Page {index + 1} · {page.tiles.length}/8
+                          </p>
+                        </div>
+                      </button>
+
+                      {canDeletePage ? (
+                        <button
+                          type="button"
+                          aria-label={`Delete ${page.name}`}
+                          onClick={() => deletePage(page.id)}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white/30 opacity-0 transition hover:bg-red-400/10 hover:text-red-300 group-hover:opacity-100"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={createPage}
+                  className="flex w-full items-center justify-center gap-2 rounded-[22px] border border-dashed border-white/15 px-3 py-4 text-sm font-semibold text-white/40 transition hover:border-[#4DA3FF]/40 hover:text-[#4DA3FF]"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Page
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-white/10 pt-3">
               <button
                 type="button"
-                onClick={createPage}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 px-3 py-3 text-sm font-semibold text-white/40 transition hover:border-[#4DA3FF]/40 hover:text-[#4DA3FF]"
+                onClick={() => setSettingsOpen((open) => !open)}
+                aria-expanded={settingsOpen}
+                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-white/65 transition hover:bg-white/[0.055] hover:text-white"
               >
-                <Plus className="h-4 w-4" />
-                New Page
+                <Settings className="h-4 w-4 text-white/45" />
+                <span className="min-w-0 flex-1">Settings</span>
+                <ChevronDown
+                  className={`h-4 w-4 text-white/35 transition ${
+                    settingsOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
+
+              {settingsOpen ? (
+                <div className="mt-2 space-y-1">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.055] hover:text-white"
+                  >
+                    <Info className="h-4 w-4 text-white/45" />
+                    <span className="min-w-0 flex-1">About PhoneDeck</span>
+                    <span className="text-xs text-white/30">v0.1.0</span>
+                  </Link>
+
+                  <Link
+                    href="/contact"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.055] hover:text-white"
+                  >
+                    <HelpCircle className="h-4 w-4 text-white/45" />
+                    <span>Help & Feedback</span>
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </div>
         </aside>
@@ -542,33 +575,43 @@ export default function BuilderPage() {
                 {activePage.name}
               </h1>
               <p className="mt-2 max-w-xl text-sm text-white/45">
-                Select tiles to edit. Add more from the app library below.
+                Drag apps into the deck. Select a tile to reveal its remove
+                control.
               </p>
             </div>
 
-            <div
-              className={`flex items-center gap-3 rounded-full px-4 py-2 text-sm font-bold ${
-                cloudOnline
-                  ? "bg-emerald-400/10 text-emerald-400"
-                  : "bg-white/10 text-white/45"
-              }`}
-            >
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
+            <div className="flex flex-col items-start gap-3 md:items-end">
+              <div
+                className={`flex items-center gap-3 rounded-full px-4 py-2 text-sm font-bold ${
                   cloudOnline
-                    ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
-                    : "bg-white/30"
+                    ? "bg-emerald-400/10 text-emerald-400"
+                    : "bg-white/10 text-white/45"
                 }`}
-              />
-              {cloudOnline
-                ? lastSyncedAt
-                  ? "Cloud Synced"
-                  : "Cloud Ready"
-                : "Local Only"}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    cloudOnline
+                      ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"
+                      : "bg-white/30"
+                  }`}
+                />
+                {cloudOnline
+                  ? lastSyncedAt
+                    ? "Cloud Synced"
+                    : "Cloud Ready"
+                  : "Local Only"}
+              </div>
+
+              <Link
+                href="/deck"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/[0.16] bg-white/[0.075] px-8 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_0_0_5px_rgba(255,255,255,0.045),0_18px_55px_rgba(0,0,0,0.42)] backdrop-blur-2xl transition hover:border-white/25 hover:bg-white/[0.11]"
+              >
+                Open Controller
+              </Link>
             </div>
           </header>
 
-          <div className="mt-8 grid gap-8 xl:grid-cols-[1fr_340px]">
+          <div className="mt-8">
             <div className="relative min-w-0">
               <div className="pointer-events-none absolute inset-x-6 top-8 h-[520px] rounded-full bg-black/70 blur-3xl" />
               <div className="relative px-6 pb-6">
@@ -578,89 +621,57 @@ export default function BuilderPage() {
                     activePageId={activePage.id}
                     selectedTileId={selectedTileId}
                     onSelectTile={setSelectedTileId}
+                    onRemoveTile={removeTileById}
                     onAddTile={addTileToActivePage}
                     onDropTile={handleDeckDrop}
                   />
                 </div>
 
                 <div className="mt-8">
-                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-white/35">
-                    Apps On This Mac
-                  </p>
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/35">
+                      Apps On This Mac
+                    </p>
 
-                  <div className="grid grid-cols-4 gap-x-5 gap-y-6 sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-7">
-                    {libraryTiles.map((tile) => (
-                      <LibraryTile
-                        key={tile.id}
-                        tile={tile}
-                        disabled={activePage.tiles.length >= 8}
-                        onAddTile={addTileToActivePage}
+                    <label className="flex h-10 w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.045] px-3 text-white/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition focus-within:border-[#4DA3FF]/45 focus-within:text-white sm:max-w-[260px]">
+                      <Search className="h-4 w-4 shrink-0" />
+                      <input
+                        value={appSearch}
+                        onChange={(event) => setAppSearch(event.target.value)}
+                        placeholder="Search apps"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/35"
                       />
-                    ))}
+                      <span className="text-xs text-white/30">
+                        {filteredLibraryTiles.length}
+                      </span>
+                    </label>
                   </div>
+
+                  {filteredLibraryTiles.length > 0 ? (
+                    <div
+                      className={`grid grid-cols-4 place-items-center gap-x-5 gap-y-8 transition sm:grid-cols-5 md:grid-cols-7 xl:grid-cols-7 ${
+                        activePageFull
+                          ? "pointer-events-none opacity-60 saturate-75"
+                          : "opacity-100"
+                      }`}
+                    >
+                      {filteredLibraryTiles.map((tile) => (
+                        <LibraryTile
+                          key={tile.id}
+                          tile={tile}
+                          disabled={activePageFull}
+                          onAddTile={addTileToActivePage}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[22px] border border-dashed border-white/10 px-5 py-8 text-center text-sm text-white/40">
+                      No apps found.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-
-            <aside className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/35">
-                Tile Inspector
-              </p>
-
-              {selectedTile ? (
-                <div className="mt-5 space-y-4">
-                  <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/35">
-                      Label
-                    </span>
-                    <input
-                      value={selectedTile.label}
-                      onChange={(event) =>
-                        updateSelectedTile("label", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm outline-none transition focus:border-[#4DA3FF]"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="text-xs font-bold uppercase tracking-[0.18em] text-white/35">
-                      Command
-                    </span>
-                    <input
-                      value={selectedTile.command}
-                      onChange={(event) =>
-                        updateSelectedTile("command", event.target.value)
-                      }
-                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm outline-none transition focus:border-[#4DA3FF]"
-                    />
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={removeSelectedTile}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm font-bold text-red-300 transition hover:border-red-400/40"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Remove Tile
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-5 space-y-4 text-sm text-white/45">
-                  <p>Select a tile in the preview to edit it.</p>
-                  <p>
-                    Click an app below to add it to the active page. Pages hold
-                    up to 8 tiles.
-                  </p>
-                </div>
-              )}
-
-              <Link
-                href="/deck"
-                className="mt-8 inline-flex w-full justify-center rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:opacity-90"
-              >
-                Open Controller
-              </Link>
-            </aside>
           </div>
         </section>
       </div>
@@ -673,6 +684,7 @@ function DeckPreview({
   activePageId,
   selectedTileId,
   onSelectTile,
+  onRemoveTile,
   onAddTile,
   onDropTile,
 }: {
@@ -680,6 +692,7 @@ function DeckPreview({
   activePageId: string;
   selectedTileId: string | null;
   onSelectTile: (tileId: string) => void;
+  onRemoveTile: (tileId: string) => void;
   onAddTile: (tile: DeckTileData, insertIndex?: number) => void;
   onDropTile: (event: DragEvent<HTMLElement>, targetIndex: number) => void;
 }) {
@@ -737,6 +750,7 @@ function DeckPreview({
                       tile={tile}
                       selected={tile.id === selectedTileId}
                       onSelectTile={onSelectTile}
+                      onRemoveTile={onRemoveTile}
                       onDropTile={(event) => onDropTile(event, index)}
                     />
                   ))}
@@ -770,18 +784,19 @@ function DeckPreviewTile({
   tile,
   selected,
   onSelectTile,
+  onRemoveTile,
   onDropTile,
 }: {
   tile: DeckTileData;
   selected: boolean;
   onSelectTile: (tileId: string) => void;
-  onDropTile: (event: DragEvent<HTMLButtonElement>) => void;
+  onRemoveTile: (tileId: string) => void;
+  onDropTile: (event: DragEvent<HTMLDivElement>) => void;
 }) {
   const Icon = tile.icon ? iconMap[tile.icon] : null;
 
   return (
-    <button
-      type="button"
+    <div
       draggable
       onDragStart={(event) => {
         event.dataTransfer.effectAllowed = "move";
@@ -792,26 +807,45 @@ function DeckPreviewTile({
       }}
       onDragOver={(event) => event.preventDefault()}
       onDrop={onDropTile}
-      onClick={() => onSelectTile(tile.id)}
-      className={`flex h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)] items-center justify-center rounded-[clamp(18px,4vw,34px)] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_24px_rgba(0,0,0,0.45)] ring-1 transition ${
+      className={`relative h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)] rounded-[clamp(18px,4vw,34px)] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_24px_rgba(0,0,0,0.45)] ring-1 transition ${
         selected
           ? "ring-[#4DA3FF] shadow-[0_0_24px_rgba(77,163,255,0.25)]"
           : "ring-white/10 hover:ring-white/25"
       }`}
-      aria-label={`Select ${tile.label}`}
     >
-      {tile.image ? (
-        <Image
-          src={tile.image}
-          alt=""
-          width={120}
-          height={120}
-          className="h-[82%] w-[82%] object-contain"
-        />
-      ) : Icon ? (
-        <Icon className="h-[clamp(24px,6vw,40px)] w-[clamp(24px,6vw,40px)] text-white" />
+      <button
+        type="button"
+        onClick={() => onSelectTile(tile.id)}
+        className="flex h-full w-full items-center justify-center rounded-[inherit]"
+        aria-label={`Select ${tile.label}`}
+      >
+        {tile.image ? (
+          <Image
+            src={tile.image}
+            alt=""
+            width={120}
+            height={120}
+            className="h-[82%] w-[82%] object-contain"
+          />
+        ) : Icon ? (
+          <Icon className="h-[clamp(24px,6vw,40px)] w-[clamp(24px,6vw,40px)] text-white" />
+        ) : null}
+      </button>
+
+      {selected ? (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemoveTile(tile.id);
+          }}
+          className="absolute right-0 top-0 z-50 flex h-7 w-7 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_0_0_2px_rgba(255,255,255,0.08),0_8px_18px_rgba(0,0,0,0.55)] backdrop-blur-2xl transition hover:border-red-200/45 hover:bg-red-400/25"
+          aria-label={`Remove ${tile.label}`}
+        >
+          <span className="h-1 w-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.45)]" />
+        </button>
       ) : null}
-    </button>
+    </div>
   );
 }
 
@@ -843,7 +877,7 @@ function LibraryTile({
         );
       }}
       onClick={() => onAddTile(tile)}
-      className="flex aspect-square cursor-grab items-center justify-center rounded-2xl p-3 transition hover:bg-white/[0.055] hover:shadow-[0_0_28px_rgba(77,163,255,0.18)] active:cursor-grabbing active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:shadow-none"
+      className="flex h-[72px] w-[72px] cursor-grab items-center justify-center rounded-[22px] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)] ring-1 ring-white/10 transition hover:ring-white/25 hover:shadow-[0_0_28px_rgba(77,163,255,0.18)] active:cursor-grabbing active:scale-95 disabled:cursor-not-allowed disabled:opacity-100 disabled:hover:ring-white/10 disabled:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_22px_rgba(0,0,0,0.42)]"
       aria-label={`Add ${tile.label}`}
     >
       {tile.image ? (
@@ -852,10 +886,10 @@ function LibraryTile({
           alt=""
           width={64}
           height={64}
-          className="h-[72%] w-[72%] object-contain"
+          className="h-[74%] w-[74%] object-contain"
         />
       ) : Icon ? (
-        <Icon className="h-8 w-8 text-white" />
+        <Icon className="h-8 w-8 text-white/75" />
       ) : null}
     </button>
   );
