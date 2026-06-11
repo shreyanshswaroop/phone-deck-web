@@ -460,9 +460,9 @@ export default function BuilderPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-[#181717] text-white">
       <div className="grid min-h-screen items-start lg:grid-cols-[340px_1fr]">
-        <aside className="bg-black p-4 lg:sticky lg:top-5 lg:self-start lg:p-0 lg:pl-5">
+        <aside className="bg-transparent p-4 lg:sticky lg:top-5 lg:self-start lg:p-0 lg:pl-5">
           <div className="flex min-h-[calc(100vh-32px)] flex-col rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_28px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl lg:h-[calc(100vh-40px)] lg:min-h-0">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.12] bg-white/[0.045] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
@@ -650,7 +650,7 @@ export default function BuilderPage() {
                 {cloudOnline
                   ? lastSyncedAt
                     ? "Cloud Synced"
-                    : "Cloud Ready"
+                    : "Live"
                   : "Local Only"}
               </div>
 
@@ -671,7 +671,7 @@ export default function BuilderPage() {
 
           <div className="mt-8">
             <div className="relative min-w-0">
-              <div className="pointer-events-none absolute inset-x-6 top-8 h-[520px] rounded-full bg-black/70 blur-3xl" />
+              <div className="pointer-events-none absolute inset-x-20 top-20 h-[360px] rounded-full bg-black/35 blur-3xl" />
               <div className="relative px-6 pb-6">
                 <div className="flex min-h-[420px] items-center justify-center">
                   <DeckPreview
@@ -774,7 +774,7 @@ function DeckPreview({
   }
 
   return (
-    <div className="relative aspect-[1.99/1] w-full max-w-[640px] rounded-[34px] bg-[#202020] shadow-[0_0_50px_rgba(255,255,255,0.08)] sm:rounded-[46px] md:rounded-[56px]">
+    <div className="relative aspect-[1.99/1] w-full max-w-[640px] rounded-[34px] bg-[#202020] shadow-[0_22px_60px_rgba(0,0,0,0.22)] sm:rounded-[46px] md:rounded-[56px]">
       <div className="absolute inset-[8px] overflow-hidden rounded-[26px] bg-black sm:inset-[10px] sm:rounded-[36px] md:inset-[11px] md:rounded-[44px]">
         <div className="absolute bottom-5 left-5 h-2 w-2 rounded-full bg-[#22c55e] shadow-[0_0_10px_rgba(34,197,94,0.9)] md:bottom-6 md:left-6" />
         <div className="absolute right-2 top-1/2 z-30 h-20 w-0.5 -translate-y-1/2 rounded-full bg-white md:right-2.5 md:h-24" />

@@ -10,11 +10,50 @@ import {
   Camera,
   FastForward,
   Mic,
+  Palette,
+  Smartphone,
+  Code2,
+  Gamepad2,
   Play,
   Rewind,
   Volume2,
 } from "lucide-react";
 const changingWords = ["build.", "hustle.", "ship.", "code."];
+
+const builtForCards = [
+  {
+    label: "FOR DEVELOPERS",
+    title: "Stay inside your flow.",
+    body: "Launch apps, trigger commands and control your Mac without reaching for the mouse.",
+    accent: "#4DA3FF",
+    visual: "code",
+    Icon: Code2,
+  },
+  {
+    label: "FOR CREATORS",
+    title: "Control your setup live.",
+    body: "Switch tools, manage media and keep your content moving from one clean deck.",
+    accent: "#ff4fd8",
+    visual: "creator",
+    Icon: Palette,
+  },
+  {
+      label: "FOR GAMERS",
+    title: "Stay locked into the game.",
+    body: "Open Discord, mute audio, capture clips and switch tools without leaving the match.",
+    accent: "#5865F2",
+    visual: "gaming",
+    Icon: Gamepad2,
+  },
+  {
+    label: "FOR MINIMALISTS",
+    title: "No extra hardware needed.",
+    body: "Your iPhone becomes the control surface already sitting beside your Mac.",
+    accent: "#f59e0b",
+    visual: "minimal",
+    Icon: Smartphone,
+  },
+] as const;
 
 export default function Home() {
   const [wordIndex, setWordIndex] = useState(0);
@@ -271,21 +310,9 @@ useEffect(() => {
     </div>
 
     <div className="mt-20 grid gap-6 md:grid-cols-2">
-      {[
-        ["FOR DEVELOPERS", "Stay inside your flow.", "Launch apps, trigger commands and control your Mac without reaching for the mouse."],
-        ["FOR CREATORS", "Control your setup live.", "Switch tools, manage media and keep your content moving from one clean deck."],
-        ["FOR STUDENTS", "Move faster while working.", "Open tools, control sound and manage your Mac from your phone during study sessions."],
-        ["FOR MINIMALISTS", "No extra hardware needed.", "Your iPhone becomes the control surface already sitting beside your Mac."],
-      ].map(([label, title, body]) => (
-        <div key={label} className="border border-white/10 bg-[#050505] p-8">
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-[#1c69d4]">
-            {label}
-          </p>
-          <h3 className="text-3xl font-bold leading-tight tracking-[-0.03em]">
-            {title}
-          </h3>
-          <p className="mt-5 leading-7 text-white/45">{body}</p>
-        </div>
+        {builtForCards.map((card, index) => (
+        <BuiltForCard key={card.label} card={card} index={index} />
+    
       ))}
     </div>
   </div>
@@ -360,6 +387,8 @@ useEffect(() => {
 </section> */}
 
       <HowItWorksSection />
+
+      <PrivacySection />
     
       <Footer />
     </main>
@@ -379,29 +408,29 @@ function HowItWorksSection() {
         </h2>
 
         <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-white/45">
-          Download PhoneDeck, connect to your Mac and start controlling your
-          setup instantly.
+          Install PocketDeck on your Mac, enter the pair code on your phone,
+          and control the exact deck you designed.
         </p>
 
         <div className="mx-auto mt-14 grid max-w-5xl overflow-hidden rounded-[28px] border border-white/10 md:grid-cols-3">
           <StepCard
             number="01"
-            title="Get PhoneDeck"
-            text="Download PhoneDeck on your iPhone and install the Mac helper. Setup takes less than a minute."
+            title="Install PocketDeck"
+            text="Download the Mac helper, open it from the menu bar, and let it sync your installed apps."
             type="download"
           />
 
           <StepCard
             number="02"
-            title="Connect Instantly"
-            text="PhoneDeck automatically discovers your Mac and establishes a secure connection."
+            title="Enter Pair Code"
+            text="Deck Studio shows a private pair code. Enter it on the controller to join the same session."
             type="connect"
           />
 
           <StepCard
             number="03"
             title="Take Control"
-            text="Launch apps, control media, adjust volume, brightness and navigate your Mac."
+            text="Tap synced app and control tiles from your phone to launch apps, play media, mute, lock, or capture your screen."
             type="control"
           />
         </div>
@@ -409,6 +438,337 @@ function HowItWorksSection() {
     </section>
   );
 }
+
+function BuiltForCard({
+  card,
+  index,
+}: {
+  card: (typeof builtForCards)[number];
+  index: number;
+}) {
+  const Icon = card.Icon;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.55, delay: index * 0.08, ease: "easeOut" }}
+      whileHover={{ y: -6 }}
+      className="group relative min-h-[292px] overflow-hidden rounded-[28px] border border-white/10 bg-[#050505] p-8 transition-colors duration-300 hover:border-white/20"      style={{
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(255,255,255,0.01)`,
+      }}
+    >
+      <motion.div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-px opacity-70"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${card.accent}, transparent)`,
+        }}
+        animate={{ x: ["-55%", "55%", "-55%"] }}
+        transition={{
+          duration: 5.5 + index,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+
+      <div className="relative z-10 flex items-start justify-between gap-6">
+        <div>
+          <p
+            className="mb-5 text-xs font-bold uppercase tracking-[0.2em]"
+            style={{ color: card.accent }}
+          >
+            {card.label}
+          </p>
+
+          <h3 className="max-w-md text-3xl font-bold leading-tight tracking-[-0.03em]">
+            {card.title}
+          </h3>
+
+          <p className="mt-5 max-w-xl leading-7 text-white/45">{card.body}</p>
+        </div>
+
+        <motion.div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]"
+          style={{ color: card.accent }}
+          animate={{ y: [0, -4, 0] }}
+          transition={{
+            duration: 2.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: index * 0.2,
+          }}
+        >
+          <Icon className="h-5 w-5" />
+        </motion.div>
+      </div>
+
+      <BuiltForVisual accent={card.accent} type={card.visual} index={index} />
+    </motion.article>
+  );
+}
+
+function BuiltForVisual({
+  accent,
+  type,
+  index,
+}: {
+  accent: string;
+  type: (typeof builtForCards)[number]["visual"];
+  index: number;
+}) {
+  if (type === "code") {
+    return (
+      <div className="pointer-events-none absolute bottom-6 right-7 flex w-44 flex-col gap-2 opacity-55 transition-opacity duration-300 group-hover:opacity-90">
+        {["open:VSCode", "mute", "screenshot"].map((command, i) => (
+          <motion.div
+            key={command}
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 font-mono text-[10px] text-white/55"
+            animate={{ x: [0, i % 2 ? -5 : 5, 0] }}
+            transition={{
+              duration: 2.4 + i * 0.4,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: index * 0.15,
+            }}
+          >
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+            {command}
+          </motion.div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "creator") {
+    return (
+      <div className="pointer-events-none absolute bottom-7 right-8 grid grid-cols-4 gap-2 opacity-55 transition-opacity duration-300 group-hover:opacity-90">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <motion.span
+            key={i}
+            className="h-8 w-8 rounded-xl border border-white/10 bg-white/[0.05]"
+            style={{
+              backgroundColor: i === 1 || i === 6 ? `${accent}33` : undefined,
+              borderColor: i === 1 || i === 6 ? `${accent}80` : undefined,
+            }}
+            animate={{ scale: i === 1 || i === 6 ? [1, 1.12, 1] : [1, 0.96, 1] }}
+            transition={{
+              duration: 2.2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.08,
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
+ if (type === "gaming") {
+    return (
+      <div className="pointer-events-none absolute bottom-7 right-8 flex items-center gap-4 opacity-60 transition-opacity duration-300 group-hover:opacity-95">
+        <motion.div
+          className="relative flex h-16 w-16 items-center justify-center rounded-[22px] border border-white/10 bg-white/[0.05]"
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span
+            className="absolute inset-0 rounded-[22px] opacity-25 blur-xl"
+            style={{ backgroundColor: accent }}
+          />
+          <Image
+            src="/icons/discord.png"
+            alt=""
+            width={44}
+            height={44}
+            className="relative h-11 w-11 object-contain"
+          />
+        </motion.div>
+
+        <div className="flex h-14 items-end gap-1.5">
+          {[22, 38, 28, 46, 18].map((height, i) => (
+            <motion.span
+              key={height}
+              className="w-2.5 rounded-full"
+              style={{ backgroundColor: accent, opacity: i === 3 ? 0.9 : 0.38 }}
+              animate={{ height: [height, height + 14, height] }}
+              transition={{
+                duration: 0.9 + i * 0.08,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.06,
+              }}
+            />
+          ))}
+        </div>
+
+        <motion.div
+          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em]"
+          style={{ color: accent }}
+          animate={{ opacity: [0.45, 1, 0.45] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          Voice
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pointer-events-none absolute bottom-7 right-8 flex items-center gap-3 opacity-55 transition-opacity duration-300 group-hover:opacity-90">
+      <motion.div
+        className="h-20 w-10 rounded-[18px] border border-white/10 bg-white/[0.04] p-1.5"
+        animate={{ rotate: [0, -2, 2, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <div
+          className="h-full rounded-[14px]"
+          style={{
+            background: `linear-gradient(180deg, ${accent}55, rgba(255,255,255,0.08))`,
+          }}
+        />
+      </motion.div>
+
+      <motion.div
+        className="grid grid-cols-2 gap-1.5"
+        animate={{ opacity: [0.45, 1, 0.45] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+      >
+        {Array.from({ length: 4 }).map((_, i) => (
+          <span
+            key={i}
+            className="h-6 w-6 rounded-lg border border-white/10 bg-white/[0.05]"
+            style={i === 0 ? { backgroundColor: `${accent}2f` } : undefined}
+          />
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function PrivacySection() {
+  return (
+    <section className="border-y border-white/7 bg-black px-6 py-16 text-white">
+      <div className="mx-auto grid max-w-4xl gap-7 p-2 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+        <div>
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.32em] text-[#4DA3FF]">
+            Privacy
+          </p>
+
+          <h2 className="max-w-sm text-3xl font-bold leading-[0.98] tracking-[-0.05em] md:text-4xl">
+            Only the right code
+            <span className="block text-white/35">connects.</span>
+          </h2>
+
+          <p className="mt-4 max-w-md text-sm leading-6 text-white/42">
+            PocketDeck creates a private paired session. The controller must
+            enter the active key before it can see your deck or send commands.
+          </p>
+        </div>
+
+        <div className="relative overflow-hidden rounded-[24px] border border-[#4DA3FF]/15 bg-black p-5">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_20%,rgba(77,163,255,0.14),transparent_38%)]" />
+
+          <div className="relative flex items-center justify-between gap-3">
+            <SecureNode label="Mac" sub="PocketDeck" />
+            <SecureLine delay={0} />
+            <SecureKey />
+            <SecureLine delay={0.45} />
+            <SecureNode label="Phone" sub="Controller" />
+          </div>
+
+          <div className="relative mt-5 grid gap-2 sm:grid-cols-3">
+            {[
+              "Pair code required",
+              "Wrong code blocked",
+              "Commands stay in session",
+            ].map((item, index) => (
+              <motion.div
+                key={item}
+                className="rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2 text-[11px] font-semibold text-white/50"
+                animate={{
+                  borderColor: [
+                    "rgba(255,255,255,0.1)",
+                    "rgba(77,163,255,0.45)",
+                    "rgba(255,255,255,0.1)",
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: index * 0.28,
+                }}
+              >
+                {item}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SecureNode({ label, sub }: { label: string; sub: string }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+      <div className="flex items-center gap-2">
+        <motion.span
+          className="h-2 w-2 rounded-full bg-[#4DA3FF] shadow-[0_0_16px_rgba(77,163,255,0.8)]"
+          animate={{ opacity: [0.35, 1, 0.35] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <p className="text-sm font-bold text-white">{label}</p>
+      </div>
+
+      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/30">
+        {sub}
+      </p>
+    </div>
+  );
+}
+
+function SecureLine({ delay }: { delay: number }) {
+  return (
+    <div className="relative h-px min-w-8 flex-1 overflow-hidden bg-white/10">
+      <motion.span
+        className="absolute inset-y-0 left-0 w-1/2 bg-[#4DA3FF]"
+        animate={{ x: ["-100%", "220%"] }}
+        transition={{
+          duration: 1.7,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay,
+        }}
+      />
+    </div>
+  );
+}
+
+function SecureKey() {
+  return (
+    <motion.div
+      className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border border-[#4DA3FF]/35 bg-[#4DA3FF]/10 shadow-[0_0_28px_rgba(77,163,255,0.16)]"
+      animate={{ scale: [1, 1.05, 1] }}
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8EC5FF]">
+        Key
+      </p>
+
+      <p className="mt-1 font-mono text-[10px] font-bold text-white/65">
+        PD-•••
+      </p>
+    </motion.div>
+  );
+}
+
+
 
 function StepCard({
   number,
@@ -460,34 +820,42 @@ function DownloadMockup() {
           <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-2">
-          <div className="h-8 w-8 rounded-xl bg-blue-500/30 p-2">
-            <div className="h-full w-full animate-pulse rounded-lg bg-blue-500" />
+        <div className="flex items-center gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/20 ring-1 ring-blue-400/30">
+            <Image
+              src="/icons/iphone.png"
+              alt=""
+              width={26}
+              height={26}
+              className="h-6 w-6 object-contain"
+            />
           </div>
 
           <div className="flex-1 space-y-2">
-            <div className="h-2 w-20 rounded-full bg-white/35" />
-            <div className="h-2 w-12 rounded-full bg-white/20" />
+            <div className="h-2 w-24 rounded-full bg-white/35" />
+            <div className="h-2 w-16 rounded-full bg-blue-300/30" />
           </div>
 
-          <div className="animate-pulse rounded-xl bg-blue-500 px-3 py-1.5 text-[10px] font-bold">
-            GET
+          <div className="animate-pulse rounded-xl bg-blue-500 px-3 py-1.5 text-[9px] font-bold">
+            OPEN
           </div>
         </div>
       </div>
 
       <div className="text-center text-blue-400 animate-pulse">↔</div>
 
-      <div className="mx-auto h-[98px] w-[58px] rounded-[22px] border border-white/10 bg-white/[0.04] p-2">
-        <div className="mx-auto mb-2 h-8 w-8 rounded-2xl border border-blue-500/40 bg-blue-500/10 p-2">
-          <div className="h-full w-full animate-pulse rounded-xl bg-blue-500" />
+      <div className="mx-auto h-[98px] w-[62px] rounded-[22px] border border-white/10 bg-white/[0.04] p-2.5 text-center">
+        <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-2xl border border-blue-500/40 bg-blue-500/10">
+          <span className="h-3 w-3 animate-pulse rounded-full bg-blue-400 shadow-[0_0_14px_rgba(96,165,250,0.8)]" />
         </div>
 
         <div className="mx-auto h-1.5 w-8 rounded-full bg-white/10" />
 
-        <div className="mx-auto mt-2 rounded-xl bg-blue-500 px-2 py-1 text-center text-[8px] font-bold">
-          GET
-        </div>
+        <p className="mt-2 text-[8px] font-bold leading-3 text-blue-300">
+          adn apps
+          <br />
+          synced
+        </p>
       </div>
     </div>
   );
@@ -503,14 +871,14 @@ function ConnectMockup() {
           <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3">
           <span className="relative flex h-3 w-3">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-3 w-3 rounded-full bg-green-400" />
           </span>
 
-          <span className="text-sm font-medium text-green-400">
-            iPhone connected
+          <span className="font-mono text-sm font-bold tracking-[0.28em] text-green-300">
+            PD-XXXXX
           </span>
         </div>
       </div>
@@ -518,13 +886,13 @@ function ConnectMockup() {
       <div className="text-center text-green-400 animate-pulse">↔</div>
 
       <div className="mx-auto h-[98px] w-[62px] rounded-[22px] border border-white/10 bg-white/[0.04] p-3 text-center">
-        <div className="mx-auto mb-3 h-3 w-3 rounded-full bg-green-400 shadow-[0_0_16px_rgba(74,222,128,0.8)]" />
+        <div className="mx-auto mb-3 h-3 w-3 animate-pulse rounded-full bg-green-400 shadow-[0_0_16px_rgba(74,222,128,0.8)]" />
         <div className="mx-auto h-1.5 w-10 rounded-full bg-green-400/40" />
 
         <p className="mt-3 text-[10px] leading-3 text-green-400">
-          MacBook
+          Code
           <br />
-          Pro
+          joined
         </p>
       </div>
     </div>
@@ -545,7 +913,7 @@ function ControlMockup() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className={`h-5 rounded-lg border border-white/10 bg-white/[0.06] ${
+              className={`h-5 rounded-lg border border-white/10 bg-white/[0.06] transition ${
                 i === 0
                   ? "animate-pulse border-purple-500/40 bg-purple-500/20"
                   : ""
@@ -555,16 +923,17 @@ function ControlMockup() {
         </div>
       </div>
 
-      <div className="text-center text-purple-400 animate-pulse">↔</div>
+      <div className="text-center text-purple-400 animate-pulse">→</div>
 
-      <div className="mx-auto flex h-[98px] w-[62px] items-center justify-center gap-2 rounded-[22px] border border-white/10 bg-white/[0.04]">
-        <div className="relative h-12 w-5 rounded-full bg-white/10">
-          <div className="absolute bottom-2 left-1/2 h-5 w-5 -translate-x-1/2 animate-bounce rounded-full bg-purple-500/80" />
+      <div className="mx-auto flex h-[98px] w-[62px] flex-col items-center justify-center gap-2 rounded-[22px] border border-white/10 bg-white/[0.04]">
+        <div className="relative grid h-12 w-12 grid-cols-2 gap-1 rounded-2xl bg-white/10 p-1.5">
+          <div className="animate-pulse rounded-md bg-purple-500/80 shadow-[0_0_14px_rgba(168,85,247,0.7)]" />
+          <div className="rounded-md bg-white/15" />
+          <div className="rounded-md bg-white/15" />
+          <div className="rounded-md bg-white/15" />
         </div>
 
-        <div className="relative h-12 w-5 rounded-full bg-white/10">
-          <div className="absolute bottom-3 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-white/20" />
-        </div>
+        <div className="h-1.5 w-8 rounded-full bg-purple-400/60" />
       </div>
     </div>
   );
@@ -651,6 +1020,8 @@ function SlideOne() {
     { id: "obs", src: "/icons/obs.png", alt: "OBS" },
   ];
 
+
+  
   return (
     <div className="grid grid-cols-4 gap-[clamp(10px,3vw,24px)]">
       {appIcons.map((icon) => (
