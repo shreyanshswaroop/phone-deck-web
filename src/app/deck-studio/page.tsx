@@ -276,6 +276,49 @@ export default function BuilderPage() {
   }, [activePageId]);
 
   useEffect(() => {
+    if (!macApps?.length) {
+      return;
+    }
+
+    const appsByCommand = new Map(
+      macApps.map((macApp) => [macApp.command, macApp])
+    );
+    const appsById = new Map(macApps.map((macApp) => [macApp.id, macApp]));
+
+    queueMicrotask(() => {
+      setPages((currentPages) => {
+        let changed = false;
+
+        const nextPages = currentPages.map((page) => ({
+          ...page,
+          tiles: page.tiles.map((tile) => {
+            if (tile.image) {
+              return tile;
+            }
+
+            const macApp =
+              appsByCommand.get(tile.command) ??
+              appsById.get(tile.id.replace(/-\d+$/, ""));
+
+            if (!macApp?.icon) {
+              return tile;
+            }
+
+            changed = true;
+
+            return {
+              ...tile,
+              image: macApp.icon,
+            };
+          }),
+        }));
+
+        return changed ? nextPages : currentPages;
+      });
+    });
+  }, [macApps]);
+
+  useEffect(() => {
     if (!hasLoadedInitialLayoutRef.current) {
       return;
     }
@@ -901,11 +944,8 @@ function DeckPreviewTile({
         aria-label={`Select ${tile.label}`}
       >
         {tile.image ? (
-          <Image
+          <TileImage
             src={tile.image}
-            alt=""
-            width={120}
-            height={120}
             loading="eager"
             className="h-[82%] w-[82%] object-contain"
           />
@@ -964,11 +1004,8 @@ function LibraryTile({
         aria-label={`Add ${tile.label}`}
       >
         {tile.image ? (
-          <Image
+          <TileImage
             src={tile.image}
-            alt=""
-            width={64}
-            height={64}
             className="h-[74%] w-[74%] object-contain"
           />
         ) : Icon ? (
@@ -997,11 +1034,8 @@ function MiniPagePreview({ tiles }: { tiles: DeckTileData[] }) {
               className="flex items-center justify-center rounded-[4px] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               {tile?.image ? (
-                <Image
+                <TileImage
                   src={tile.image}
-                  alt=""
-                  width={16}
-                  height={16}
                   className="h-[78%] w-[78%] object-contain"
                 />
               ) : Icon ? (
@@ -1012,5 +1046,30 @@ function MiniPagePreview({ tiles }: { tiles: DeckTileData[] }) {
         })}
       </div>
     </div>
+  );
+}
+
+function TileImage({
+  src,
+  className,
+  loading,
+}: {
+  src: string;
+  className?: string;
+  loading?: "eager" | "lazy";
+}) {
+  if (src.startsWith("data:")) {
+    return <img src={src} alt="" loading={loading} className={className} />;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={120}
+      height={120}
+      loading={loading}
+      className={className}
+    />
   );
 }

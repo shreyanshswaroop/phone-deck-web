@@ -5,6 +5,7 @@ const {
   Tray,
   dialog,
   nativeImage,
+  nativeTheme,
   shell,
 } = require("electron");
 const { execFile, spawn } = require("node:child_process");
@@ -31,6 +32,7 @@ const COMMAND_EVENTS = [
 ];
 const CONFIG_FILE = "config.json";
 const APP_DIRECTORIES = ["/Applications", "/System/Applications"];
+const APP_ICON_SIZE = 192;
 const TRAY_ICON_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAW0lEQVR4Ae3VQQrAIAxE0dz/0t2LSKE2ToRWsD7UDyYJbk0sIiJ2IaV0fp0BmH2EPoIeMEag/cXmPy45KYM48mbJ/cGLb4gIpDBpQ+rkk1jRv3QCbpE1Lh8vywQQDiy74Yh6uwAAAABJRU5ErkJggg==";
 
@@ -278,7 +280,11 @@ function publishApps() {
 
   socket.emit(MAC_APPS_CURRENT_EVENT, { pairCode, apps: cachedApps });
   socket.emit(MAC_APPS_UPDATE_EVENT, { pairCode, apps: cachedApps });
-  setStatus(`Synced ${cachedApps.length} Mac apps.`);
+  setStatus(
+    `Synced ${cachedApps.length} Mac apps, ${countSyncedIcons()} ${
+      nativeTheme.shouldUseDarkColors ? "dark" : "light"
+    } icons.`,
+  );
 }
 
 async function refreshAndPublishApps() {
@@ -348,6 +354,23 @@ async function getInstalledApps() {
 }
 
 async function getAppIconDataUrl(appPath) {
+  const appearanceAwareIcon = await getAppearanceAwareAppIconDataUrl(appPath);
+
+  if (appearanceAwareIcon) {
+    return appearanceAwareIcon;
+  }
+
+  try {
+    const thumbnail = await nativeImage.createThumbnailFromPath(appPath, {
+      width: APP_ICON_SIZE,
+      height: APP_ICON_SIZE,
+    });
+
+    if (!thumbnail.isEmpty()) {
+      return thumbnail.toDataURL();
+    }
+  } catch {}
+
   const iconPath = await getAppIconPath(appPath);
 
   if (!iconPath) {
@@ -360,7 +383,73 @@ async function getAppIconDataUrl(appPath) {
     return undefined;
   }
 
-  return icon.resize({ width: 96, height: 96, quality: "best" }).toDataURL();
+  return icon
+    .resize({ width: APP_ICON_SIZE, height: APP_ICON_SIZE, quality: "best" })
+    .toDataURL();
+}
+
+async function getAppearanceAwareAppIconDataUrl(appPath) {
+  try {
+    const rawDataUrl = await execFileAsync(
+      "/usr/bin/osascript",
+      [
+        "-l",
+        "JavaScript",
+        "-e",
+        createAppearanceAwareIconScript(),
+        JSON.stringify({
+          appPath,
+          appearance: nativeTheme.shouldUseDarkColors ? "dark" : "light",
+        }),
+      ],
+      { maxBuffer: 1024 * 1024 * 5 },
+    );
+    const icon = nativeImage.createFromDataURL(rawDataUrl.trim());
+
+    if (icon.isEmpty()) {
+      return undefined;
+    }
+
+    return icon
+      .resize({ width: APP_ICON_SIZE, height: APP_ICON_SIZE, quality: "best" })
+      .toDataURL();
+  } catch {
+    return undefined;
+  }
+}
+
+function createAppearanceAwareIconScript() {
+  return `
+ObjC.import("AppKit");
+ObjC.import("Foundation");
+
+const args = ObjC.deepUnwrap($.NSProcessInfo.processInfo.arguments);
+const input = JSON.parse(args[5] || "{}");
+const appearanceName =
+  input.appearance === "dark"
+    ? $.NSAppearanceNameDarkAqua
+    : $.NSAppearanceNameAqua;
+const appearance = $.NSAppearance.appearanceNamed(appearanceName);
+
+if (appearance) {
+  $.NSAppearance.setCurrentAppearance(appearance);
+}
+
+const image = $.NSWorkspace.sharedWorkspace.iconForFile(input.appPath);
+const tiff = image.TIFFRepresentation;
+const bitmap = $.NSBitmapImageRep.imageRepWithData(tiff);
+const png = bitmap.representationUsingTypeProperties(
+  $.NSBitmapImageFileTypePNG,
+  $({})
+);
+
+"data:image/png;base64," +
+  ObjC.unwrap(png.base64EncodedStringWithOptions(0));
+`;
+}
+
+function countSyncedIcons() {
+  return cachedApps.filter((macApp) => Boolean(macApp.icon)).length;
 }
 
 async function getAppIconPath(appPath) {
@@ -632,6 +721,7 @@ app.whenReady().then(async () => {
   updateTrayMenu();
   connectSocket();
   showPairCodeWindow();
+  nativeTheme.on("updated", refreshAndPublishApps);
 });
 
 app.on("activate", showPairCodeWindow);

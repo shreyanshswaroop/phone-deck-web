@@ -512,11 +512,8 @@ function DeckTile({
       className="group flex h-[clamp(54px,13vw,112px)] w-[clamp(54px,13vw,112px)] items-center justify-center rounded-[clamp(18px,4vw,34px)] bg-[#171717] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_24px_rgba(0,0,0,0.45)] ring-1 ring-white/10 transition active:scale-95"
     >
       {tile.image ? (
-        <Image
+        <TileImage
           src={tile.image}
-          alt=""
-          width={150}
-          height={150}
           loading="eager"
           className="h-[80%] w-[80%] object-contain transition group-active:scale-90"
         />
@@ -524,5 +521,30 @@ function DeckTile({
         <Icon className="h-[42%] w-[42%] text-white transition group-active:scale-90" />
       ) : null}
     </button>
+  );
+}
+
+function TileImage({
+  src,
+  className,
+  loading,
+}: {
+  src: string;
+  className?: string;
+  loading?: "eager" | "lazy";
+}) {
+  if (src.startsWith("data:")) {
+    return <img src={src} alt="" loading={loading} className={className} />;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={150}
+      height={150}
+      loading={loading}
+      className={className}
+    />
   );
 }
