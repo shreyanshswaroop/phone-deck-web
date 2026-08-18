@@ -19,6 +19,16 @@ const PAIRING_SESSION_EVENT = "join-pairing-session";
 const MAC_APPS_CURRENT_EVENT = "mac-apps-current";
 const MAC_APPS_REQUEST_EVENT = "mac-apps-request";
 const MAC_APPS_UPDATE_EVENT = "mac-apps-update";
+const COMMAND_EVENTS = [
+  "phone-command",
+  "mac-command",
+  "deck-command",
+  "run-command",
+  "command",
+  "execute-command",
+  "execute-mac-command",
+  "remote-command",
+];
 const CONFIG_FILE = "config.json";
 const APP_DIRECTORIES = ["/Applications", "/System/Applications"];
 const TRAY_ICON_DATA_URL =
@@ -144,6 +154,10 @@ function updateTrayMenu() {
         click: refreshAndPublishApps,
       },
       {
+        label: "Test Command: Open Safari",
+        click: () => runCommand("open:com.apple.Safari"),
+      },
+      {
         label: "Quit PocketDeck",
         click: () => app.quit(),
       },
@@ -178,6 +192,12 @@ function connectSocket() {
       platform: "macos",
       connectedAt: Date.now(),
     });
+    socket.emit("register-desktop", {
+      pairCode,
+      name: os.hostname(),
+      platform: "macos",
+      connectedAt: Date.now(),
+    });
     refreshAndPublishApps();
   });
 
@@ -190,15 +210,65 @@ function connectSocket() {
   });
 
   socket.on(MAC_APPS_REQUEST_EVENT, publishApps);
-  socket.on("phone-command", (payload) => {
-    if (!payload || payload.pairCode !== pairCode || !payload.command) {
+  COMMAND_EVENTS.forEach((eventName) => {
+    socket.on(eventName, (payload) => handleCommandPayload(payload, eventName));
+  });
+  socket.onAny((eventName, payload) => {
+    if (
+      COMMAND_EVENTS.includes(eventName) ||
+      eventName === MAC_APPS_REQUEST_EVENT
+    ) {
       return;
     }
 
-    runCommand(payload.command);
+    handleCommandPayload(payload, eventName);
   });
 
   updateTrayMenu();
+}
+
+function extractCommand(payload) {
+  if (typeof payload === "string") {
+    return payload.trim();
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  if (typeof payload.command === "string") {
+    return payload.command.trim();
+  }
+
+  if (payload.data && typeof payload.data.command === "string") {
+    return payload.data.command.trim();
+  }
+
+  return "";
+}
+
+function payloadBelongsToPair(payload) {
+  if (!payload || typeof payload !== "object") {
+    return true;
+  }
+
+  const payloadPairCode =
+    typeof payload.pairCode === "string"
+      ? normalizePairingCode(payload.pairCode)
+      : "";
+
+  return !payloadPairCode || payloadPairCode === pairCode;
+}
+
+function handleCommandPayload(payload, eventName) {
+  const command = extractCommand(payload);
+
+  if (!command || !payloadBelongsToPair(payload)) {
+    return;
+  }
+
+  setStatus(`Received ${command} from ${eventName}.`);
+  runCommand(command);
 }
 
 function publishApps() {
