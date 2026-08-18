@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f7f8;
+  --foreground: #1f1f23;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer components {
+  .field-input {
+    width: 100%;
+    border-radius: 18px;
+    border: 1px solid rgb(0 0 0 / 0.08);
+    background: #fbfbfc;
+    padding: 1rem 1.125rem;
+    color: #1f1f23;
+    outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .field-input::placeholder {
+    color: #a1a1aa;
+  }
+
+  .field-input:focus {
+    border-color: rgb(10 122 245 / 0.58);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgb(10 122 245 / 0.12);
+  }
+}
+
+@keyframes swipe {
+  0%,
+  26% {
+    transform: translateX(0%);
+  }
+
+  33%,
+  59% {
+    transform: translateX(-33.333%);
+  }
+
+  66%,
+  92% {
+    transform: translateX(-66.666%);
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+.animate-swipe {
+  animation: swipe 9s ease-in-out infinite;
+  will-change: transform;
+}
