@@ -14,6 +14,7 @@ const os = require("node:os");
 const { io } = require("socket.io-client");
 
 const CLOUD_URL = "https://phone-deck-cloud.onrender.com";
+const WEB_URL = "https://phone-deck-web.vercel.app";
 const PAIRING_SESSION_EVENT = "join-pairing-session";
 const MAC_APPS_CURRENT_EVENT = "mac-apps-current";
 const MAC_APPS_REQUEST_EVENT = "mac-apps-request";
@@ -127,18 +128,14 @@ function updateTrayMenu() {
         label: "Open Deck Studio",
         click: () =>
           shell.openExternal(
-            `https://phone-deck-web-main.vercel.app/deck-studio?pair=${encodeURIComponent(
-              pairCode,
-            )}`,
+            `${WEB_URL}/deck-studio?pair=${encodeURIComponent(pairCode)}`,
           ),
       },
       {
         label: "Open Phone Controller",
         click: () =>
           shell.openExternal(
-            `https://phone-deck-web-main.vercel.app/deck?pair=${encodeURIComponent(
-              pairCode,
-            )}`,
+            `${WEB_URL}/deck?pair=${encodeURIComponent(pairCode)}`,
           ),
       },
       { type: "separator" },
