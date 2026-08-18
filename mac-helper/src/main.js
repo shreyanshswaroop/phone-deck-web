@@ -338,12 +338,62 @@ async function getInstalledApps() {
       id: bundleId || appPath,
       name,
       command: bundleId ? `open:${bundleId}` : `open-path:${appPath}`,
+      icon: await getAppIconDataUrl(appPath),
       bundleId,
       path: appPath,
     });
   }
 
   return apps.slice(0, 250);
+}
+
+async function getAppIconDataUrl(appPath) {
+  const iconPath = await getAppIconPath(appPath);
+
+  if (!iconPath) {
+    return undefined;
+  }
+
+  const icon = nativeImage.createFromPath(iconPath);
+
+  if (icon.isEmpty()) {
+    return undefined;
+  }
+
+  return icon.resize({ width: 96, height: 96, quality: "best" }).toDataURL();
+}
+
+async function getAppIconPath(appPath) {
+  const infoPlistPath = path.join(appPath, "Contents", "Info.plist");
+  const resourcesPath = path.join(appPath, "Contents", "Resources");
+
+  try {
+    const iconFile = await execFileAsync("/usr/bin/plutil", [
+      "-extract",
+      "CFBundleIconFile",
+      "raw",
+      infoPlistPath,
+    ]);
+    const baseIconName = iconFile.endsWith(".icns")
+      ? iconFile.slice(0, -5)
+      : iconFile;
+    const candidates = [
+      iconFile,
+      `${baseIconName}.icns`,
+      `${baseIconName}@2x.icns`,
+    ];
+
+    for (const candidate of candidates) {
+      const candidatePath = path.join(resourcesPath, candidate);
+
+      try {
+        await fs.access(candidatePath);
+        return candidatePath;
+      } catch {}
+    }
+  } catch {}
+
+  return undefined;
 }
 
 async function runCommand(command) {
